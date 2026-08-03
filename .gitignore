@@ -1,0 +1,65 @@
+# ==========================================
+# Docker / Local Environment & Secrets
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.log
+docker-compose.override.yml
+
+# ==========================================
+# Django (Backend)
+# ==========================================
+# Virtual environments (if running locally outside Docker)
+venv/
+.venv/
+env/
+ENV/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Local database, static, and user-uploaded media files
+*.sqlite3
+*.db
+db.sqlite3
+media/
+staticfiles/
+static_root/
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ==========================================
+# Next.js (Frontend)
+# ==========================================
+# Build outputs, cache, and dependencies
+.next/
+out/
+build/
+dist/
+node_modules/
+.pnpm-debug.log*
+
+# Package manager lock files (uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ==========================================
+# IDEs & System Files
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
