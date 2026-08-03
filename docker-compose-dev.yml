@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vetapp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vetapp
+      POSTGRES_USER: vetapp
+      POSTGRES_PASSWORD: vetapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - vetapp_postgres_data:/var/lib/postgresql/data
+      - ./deployment/docker/dev_files/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vetapp -d vetapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+    container_name: vetapp_web
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vetapp
+      POSTGRES_USER: vetapp
+      POSTGRES_PASSWORD: vetapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_SCHEMA: vetapp
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  vetapp_postgres_data:
