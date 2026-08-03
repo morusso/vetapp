@@ -9,12 +9,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc libpq-dev postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+COPY backend/ .
 
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir -r requirements/requirements.txt
 
-RUN cp deployment/docker/dev_files/entrypoint.sh /entrypoint.sh \
-    && chmod +x /entrypoint.sh
+COPY deployment/docker/dev_files/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
 
