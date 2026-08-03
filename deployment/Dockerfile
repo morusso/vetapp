@@ -11,7 +11,7 @@ RUN apt-get update \
 
 COPY backend/ .
 
-RUN pip install --no-cache-dir -r requirements/requirements.txt
+RUN pip install --no-cache-dir -r requirements/requirements-dev.txt
 
 COPY deployment/docker/dev_files/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

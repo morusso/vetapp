@@ -2,3 +2,7 @@
 name = "vetapp"
 version = "0.1.0"
 requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "vetapp.settings"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
