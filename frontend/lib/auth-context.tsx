@@ -28,14 +28,14 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// odśwież token minutę przed jego wygaśnięciem, zamiast czekać na 401
+// refresh the token a minute before it expires, instead of waiting for a 401
 const REFRESH_BUFFER_MS = 60_000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // przerywa cykl referencji między performRefresh a scheduleRefresh
+  // breaks the reference cycle between performRefresh and scheduleRefresh
   const scheduleRefreshRef = useRef<(accessToken: string) => void>(() => {});
 
   const clearRefreshTimer = useCallback(() => {
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error("useAuth musi być użyty wewnątrz AuthProvider.");
+    throw new Error("useAuth must be used within an AuthProvider.");
   }
   return ctx;
 }

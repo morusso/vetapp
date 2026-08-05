@@ -13,18 +13,23 @@ export default function AuthStatus() {
   if (!isAuthenticated) {
     return (
       <Link href="/login" className="text-sm font-medium underline">
-        Zaloguj się
+        Log in
       </Link>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => logout()}
-      className="text-sm font-medium underline"
-    >
-      Wyloguj się
-    </button>
+    <div className="flex items-center gap-4">
+      <Link href="/change-password" className="text-sm font-medium underline">
+        Change password
+      </Link>
+      <button
+        type="button"
+        onClick={() => logout()}
+        className="text-sm font-medium underline"
+      >
+        Log out
+      </button>
+    </div>
   );
 }

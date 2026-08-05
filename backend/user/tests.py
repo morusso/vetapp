@@ -69,6 +69,80 @@ def test_logout_blacklists_refresh_token(client, user):
 
 
 @pytest.mark.django_db
+def test_change_password_requires_authentication(client):
+    response = client.post(
+        '/api/user/change-password/',
+        {'old_password': 's3cr3t-pass', 'new_password': 'n3w-s3cr3t-pass'},
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_change_password_rejects_wrong_old_password(client, user):
+    access_token = RefreshToken.for_user(user).access_token
+
+    response = client.post(
+        '/api/user/change-password/',
+        {'old_password': 'wrong-pass', 'new_password': 'n3w-s3cr3t-pass'},
+        HTTP_AUTHORIZATION=f'Bearer {access_token}',
+    )
+
+    assert response.status_code == 400
+    assert 'old_password' in response.data
+
+
+@pytest.mark.django_db
+def test_change_password_rejects_weak_new_password(client, user):
+    access_token = RefreshToken.for_user(user).access_token
+
+    response = client.post(
+        '/api/user/change-password/',
+        {'old_password': 's3cr3t-pass', 'new_password': '12345678'},
+        HTTP_AUTHORIZATION=f'Bearer {access_token}',
+    )
+
+    assert response.status_code == 400
+    assert 'new_password' in response.data
+
+
+@pytest.mark.django_db
+def test_change_password_success_updates_credentials(client, user):
+    access_token = RefreshToken.for_user(user).access_token
+
+    response = client.post(
+        '/api/user/change-password/',
+        {'old_password': 's3cr3t-pass', 'new_password': 'n3w-s3cr3t-pass'},
+        HTTP_AUTHORIZATION=f'Bearer {access_token}',
+    )
+    assert response.status_code == 204
+
+    user.refresh_from_db()
+    assert user.check_password('n3w-s3cr3t-pass')
+
+    old_login = client.post('/api/token/', {'email': 'vet@example.com', 'password': 's3cr3t-pass'})
+    assert old_login.status_code == 401
+
+    new_login = client.post('/api/token/', {'email': 'vet@example.com', 'password': 'n3w-s3cr3t-pass'})
+    assert new_login.status_code == 200
+
+
+@pytest.mark.django_db
+def test_change_password_blacklists_existing_refresh_tokens(client, user):
+    refresh = RefreshToken.for_user(user)
+    access_token = refresh.access_token
+
+    response = client.post(
+        '/api/user/change-password/',
+        {'old_password': 's3cr3t-pass', 'new_password': 'n3w-s3cr3t-pass'},
+        HTTP_AUTHORIZATION=f'Bearer {access_token}',
+    )
+    assert response.status_code == 204
+
+    refresh_response = client.post('/api/token/refresh/', {'refresh': str(refresh)})
+    assert refresh_response.status_code == 401
+
+
+@pytest.mark.django_db
 def test_admin_revoke_all_tokens_blacklists_every_outstanding_token(user):
     RefreshToken.for_user(user)
     RefreshToken.for_user(user)
