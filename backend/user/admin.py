@@ -8,10 +8,10 @@ from user.models import User
 from user.tokens import blacklist_tokens as _blacklist
 
 
-@admin.action(description='Wyloguj wszędzie (unieważnij wszystkie tokeny)')
+@admin.action(description='Log out everywhere (revoke all tokens)')
 def revoke_all_tokens(modeladmin, request, queryset):
     count = _blacklist(OutstandingToken.objects.filter(user__in=queryset))
-    modeladmin.message_user(request, f'Unieważniono {count} token(ów).')
+    modeladmin.message_user(request, f'Revoked {count} token(s).')
 
 
 @admin.register(User)
@@ -21,12 +21,12 @@ class UserAdmin(DjangoUserAdmin):
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Dane osobowe', {'fields': ('first_name', 'last_name')}),
+        ('Personal info', {'fields': ('first_name', 'last_name')}),
         (
-            'Uprawnienia',
+            'Permissions',
             {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')},
         ),
-        ('Ważne daty', {'fields': ('last_login', 'date_joined')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {'classes': ('wide',), 'fields': ('email', 'password1', 'password2')}),
@@ -41,10 +41,10 @@ class UserAdmin(DjangoUserAdmin):
     actions = [*DjangoUserAdmin.actions, revoke_all_tokens]
 
 
-@admin.action(description='Zablacklistuj wybrane tokeny')
+@admin.action(description='Blacklist selected tokens')
 def blacklist_selected_tokens(modeladmin, request, queryset):
     count = _blacklist(queryset)
-    modeladmin.message_user(request, f'Zablacklistowano {count} token(ów).')
+    modeladmin.message_user(request, f'Blacklisted {count} token(s).')
 
 
 admin.site.unregister(OutstandingToken)

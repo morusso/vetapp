@@ -10,7 +10,7 @@ class UserManager(BaseUserManager):
 
     def _create_user(self, email, password, **extra_fields):
         if not email:
-            raise ValueError('Adres email jest wymagany.')
+            raise ValueError('The email address is required.')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -27,20 +27,20 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
 
         if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser musi mieć is_staff=True.')
+            raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser musi mieć is_superuser=True.')
+            raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(_('adres email'), unique=True)
-    first_name = models.CharField(_('imię'), max_length=150, blank=True)
-    last_name = models.CharField(_('nazwisko'), max_length=150, blank=True)
-    is_staff = models.BooleanField(_('personel'), default=False)
-    is_active = models.BooleanField(_('aktywny'), default=True)
-    date_joined = models.DateTimeField(_('data dołączenia'), default=timezone.now)
+    email = models.EmailField(_('email address'), unique=True)
+    first_name = models.CharField(_('first name'), max_length=150, blank=True)
+    last_name = models.CharField(_('last name'), max_length=150, blank=True)
+    is_staff = models.BooleanField(_('staff status'), default=False)
+    is_active = models.BooleanField(_('active'), default=True)
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
     objects = UserManager()
 

@@ -31,7 +31,7 @@ export default function LoginPage() {
       setError(
         err instanceof LoginError
           ? err.message
-          : "Nie udało się połączyć z serwerem."
+          : "Could not connect to the server."
       );
     } finally {
       setIsSubmitting(false);
@@ -40,7 +40,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">Logowanie</h1>
+      <h1 className="text-2xl font-semibold">Log in</h1>
 
       <form
         onSubmit={handleSubmit}
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-1">
           <label htmlFor="password" className="text-sm font-medium">
-            Hasło
+            Password
           </label>
           <input
             id="password"
@@ -83,7 +83,7 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className="rounded bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
         >
-          {isSubmitting ? "Logowanie…" : "Zaloguj się"}
+          {isSubmitting ? "Logging in…" : "Log in"}
         </button>
       </form>
     </main>

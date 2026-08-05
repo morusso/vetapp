@@ -31,7 +31,7 @@ class LogoutView(APIView):
         refresh_token = request.data.get('refresh')
         if not refresh_token:
             return Response(
-                {'detail': 'Pole "refresh" jest wymagane.'},
+                {'detail': 'The "refresh" field is required.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -39,7 +39,7 @@ class LogoutView(APIView):
             RefreshToken(refresh_token).blacklist()
         except TokenError:
             return Response(
-                {'detail': 'Nieprawidłowy lub już unieważniony token.'},
+                {'detail': 'Invalid or already revoked token.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

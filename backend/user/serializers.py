@@ -9,7 +9,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_old_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
-            raise serializers.ValidationError('Nieprawidłowe obecne hasło.')
+            raise serializers.ValidationError('Incorrect current password.')
         return value
 
     def validate_new_password(self, value):
