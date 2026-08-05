@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -91,6 +95,9 @@ DATABASES = {
 }
 
 
+AUTH_USER_MODEL = 'user.User'
+
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -134,7 +141,32 @@ STATIC_URL = 'static/'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+
+# Simple JWT
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+
+JWT_PRIVATE_KEY_PATH = Path(
+    os.environ.get('JWT_PRIVATE_KEY_PATH', BASE_DIR / 'vetapp' / 'keys' / 'private.pem')
+)
+JWT_PUBLIC_KEY_PATH = Path(
+    os.environ.get('JWT_PUBLIC_KEY_PATH', BASE_DIR / 'vetapp' / 'keys' / 'public.pem')
+)
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'RS256',
+    'SIGNING_KEY': JWT_PRIVATE_KEY_PATH.read_text(),
+    'VERIFYING_KEY': JWT_PUBLIC_KEY_PATH.read_text(),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
 }

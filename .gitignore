@@ -35,6 +35,9 @@ __pycache__/
 db.sqlite3
 media/
 staticfiles/
+
+# JWT signing keys
+*.pem
 static_root/
 
 # Testing & Coverage
