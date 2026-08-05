@@ -1,19 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from user.forms import UserChangeForm, UserCreationForm
 from user.models import User
-
-
-def _blacklist(tokens):
-    created = 0
-    for token in tokens:
-        _obj, was_created = BlacklistedToken.objects.get_or_create(token=token)
-        if was_created:
-            created += 1
-    return created
+from user.tokens import blacklist_tokens as _blacklist
 
 
 @admin.action(description='Wyloguj wszędzie (unieważnij wszystkie tokeny)')
