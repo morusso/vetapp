@@ -8,26 +8,30 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.serializers import ChangePasswordSerializer
 from user.tokens import blacklist_tokens
+from vetapp.mixins import GenericErrorHandlingMixin
 
 
-class ChangePasswordView(APIView):
+class ChangePasswordView(GenericErrorHandlingMixin, APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        request.user.set_password(serializer.validated_data['new_password'])
-        request.user.save(update_fields=['password'])
-        blacklist_tokens(OutstandingToken.objects.filter(user=request.user))
+        try:
+            request.user.set_password(serializer.validated_data['new_password'])
+            request.user.save(update_fields=['password'])
+            blacklist_tokens(OutstandingToken.objects.filter(user=request.user))
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as err:
+            return self._handle_generic_error(err)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class LogoutView(APIView):
+class LogoutView(GenericErrorHandlingMixin, APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         refresh_token = request.data.get('refresh')
         if not refresh_token:
             return Response(
@@ -37,10 +41,11 @@ class LogoutView(APIView):
 
         try:
             RefreshToken(refresh_token).blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
         except TokenError:
             return Response(
                 {'detail': 'Invalid or already revoked token.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as err:
+            return self._handle_generic_error(err)
