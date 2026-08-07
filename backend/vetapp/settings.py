@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'user',
     'clinical_data',
     'animals',
+    'clients',
 ]
 
 MIDDLEWARE = [
