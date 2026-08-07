@@ -21,6 +21,18 @@ export default function DashboardPage() {
         >
           Animals
         </Link>
+        <Link
+          href="/clients"
+          className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+        >
+          Clients
+        </Link>
+        <Link
+          href="/patients"
+          className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+        >
+          Patients
+        </Link>
       </div>
     </main>
   );

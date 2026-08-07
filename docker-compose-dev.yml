@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - vetapp_postgres_data:/var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql/data
       - ./deployment/docker/dev_files/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vetapp -d vetapp"]
@@ -57,5 +57,4 @@ services:
       - backend
 
 volumes:
-  vetapp_postgres_data:
   vetapp_frontend_node_modules:

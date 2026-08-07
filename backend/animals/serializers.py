@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from animals.models import Animal, AnimalType
+from animals.models import Animal, AnimalType, Patient, PatientWeight
 
 
 class AnimalTypeSerializer(serializers.ModelSerializer):
@@ -25,3 +25,40 @@ class AnimalSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class PatientSerializer(serializers.ModelSerializer):
+    owner_name = serializers.SerializerMethodField()
+    breed_name = serializers.CharField(source="breed.name", read_only=True)
+
+    class Meta:
+        model = Patient
+        fields = [
+            "id",
+            "name",
+            "owner",
+            "owner_name",
+            "breed",
+            "breed_name",
+            "sex",
+            "birth_date",
+            "color",
+            "microchip_number",
+            "note",
+            "is_sterilized",
+            "is_deceased",
+            "date_of_death",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_owner_name(self, obj):
+        return str(obj.owner)
+
+
+class PatientWeightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientWeight
+        fields = ["id", "patient", "weight_kg", "recorded_at", "created_at"]
+        read_only_fields = ["id", "created_at"]

@@ -26,6 +26,12 @@ export default function AuthStatus() {
       <Link href="/animals" className="text-sm font-medium underline">
         Animals
       </Link>
+      <Link href="/clients" className="text-sm font-medium underline">
+        Clients
+      </Link>
+      <Link href="/patients" className="text-sm font-medium underline">
+        Patients
+      </Link>
       <Link href="/change-password" className="text-sm font-medium underline">
         Change password
       </Link>
