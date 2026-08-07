@@ -1,4 +1,8 @@
-import { API_URL, getAccessToken } from "./auth";
+import { API_URL } from "./auth";
+import { ApiError, request, type Paginated } from "./api";
+
+export { ApiError };
+export type { Paginated };
 
 export type AnimalType = {
   id: number;
@@ -17,46 +21,6 @@ export type Animal = {
   created_at: string;
   updated_at: string;
 };
-
-export type Paginated<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-};
-
-export class ApiError extends Error {
-  fieldErrors: Record<string, string[]>;
-
-  constructor(fieldErrors: Record<string, string[]>) {
-    super(Object.values(fieldErrors).flat().join(" "));
-    this.fieldErrors = fieldErrors;
-  }
-}
-
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getAccessToken()}`,
-      ...options.headers,
-    },
-  });
-
-  if (res.status === 204) {
-    return undefined as T;
-  }
-
-  if (!res.ok) {
-    if (res.status === 400) {
-      throw new ApiError(await res.json());
-    }
-    throw new ApiError({ detail: [`Request failed with status ${res.status}.`] });
-  }
-
-  return res.json();
-}
 
 const ANIMAL_TYPES_URL = `${API_URL}/api/animals/types/`;
 const ANIMALS_URL = `${API_URL}/api/animals/`;
@@ -100,6 +64,17 @@ export function deleteAnimalType(id: number) {
 
 export function listAnimals(url: string = ANIMALS_URL) {
   return request<Paginated<Animal>>(url);
+}
+
+export async function listAllAnimals(): Promise<Animal[]> {
+  const all: Animal[] = [];
+  let url: string | undefined = ANIMALS_URL;
+  while (url) {
+    const page = await listAnimals(url);
+    all.push(...page.results);
+    url = page.next ?? undefined;
+  }
+  return all;
 }
 
 export function getAnimal(id: number) {

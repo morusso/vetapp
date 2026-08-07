@@ -261,3 +261,19 @@ def test_patient_weight_delete(auth_client, patient_weight):
     response = auth_client.delete(f"/api/animals/patients/weights/{patient_weight.pk}/")
     assert response.status_code == 204
     assert not PatientWeight.objects.filter(pk=patient_weight.pk).exists()
+
+
+@pytest.mark.django_db
+def test_patient_weight_filter_by_patient(auth_client, patient_weight, owner, breed):
+    other_patient = Patient.objects.create(name="Azor", owner=owner, breed=breed)
+    PatientWeight.objects.create(
+        patient=other_patient, weight_kg=Decimal("20.00"), recorded_at=date(2026, 1, 1)
+    )
+
+    response = auth_client.get(
+        f"/api/animals/patients/weights/?patient={patient_weight.patient_id}"
+    )
+
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["id"] == patient_weight.pk

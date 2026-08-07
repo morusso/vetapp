@@ -40,8 +40,14 @@ class PatientDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PatientWeightListCreateView(generics.ListCreateAPIView):
-    queryset = PatientWeight.objects.select_related("patient").all()
     serializer_class = PatientWeightSerializer
+
+    def get_queryset(self):
+        queryset = PatientWeight.objects.select_related("patient").all()
+        patient_id = self.request.query_params.get("patient")
+        if patient_id:
+            queryset = queryset.filter(patient_id=patient_id)
+        return queryset
 
 
 class PatientWeightDetailView(generics.RetrieveUpdateDestroyAPIView):
