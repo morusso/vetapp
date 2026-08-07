@@ -8,7 +8,7 @@ class AnimalType(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -17,14 +17,14 @@ class AnimalType(models.Model):
 class Animal(models.Model):
     name = models.CharField(max_length=150)
     animal_type = models.ForeignKey(
-        AnimalType, on_delete=models.PROTECT, related_name='animals'
+        AnimalType, on_delete=models.PROTECT, related_name="animals"
     )
     description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name

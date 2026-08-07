@@ -8,10 +8,10 @@ from user.models import User
 from user.tokens import blacklist_tokens as _blacklist
 
 
-@admin.action(description='Log out everywhere (revoke all tokens)')
+@admin.action(description="Log out everywhere (revoke all tokens)")
 def revoke_all_tokens(modeladmin, request, queryset):
     count = _blacklist(OutstandingToken.objects.filter(user__in=queryset))
-    modeladmin.message_user(request, f'Revoked {count} token(s).')
+    modeladmin.message_user(request, f"Revoked {count} token(s).")
 
 
 @admin.register(User)
@@ -20,31 +20,39 @@ class UserAdmin(DjangoUserAdmin):
     add_form = UserCreationForm
 
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        (None, {"fields": ("email", "password")}),
+        ("Personal info", {"fields": ("first_name", "last_name")}),
         (
-            'Permissions',
-            {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')},
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
         ),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
-        (None, {'classes': ('wide',), 'fields': ('email', 'password1', 'password2')}),
+        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),
     )
 
-    list_display = ('email', 'first_name', 'last_name', 'is_staff')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email', 'first_name', 'last_name')
-    ordering = ('email',)
-    filter_horizontal = ('groups', 'user_permissions')
+    list_display = ("email", "first_name", "last_name", "is_staff")
+    list_filter = ("is_staff", "is_superuser", "is_active", "groups")
+    search_fields = ("email", "first_name", "last_name")
+    ordering = ("email",)
+    filter_horizontal = ("groups", "user_permissions")
 
     actions = [*DjangoUserAdmin.actions, revoke_all_tokens]
 
 
-@admin.action(description='Blacklist selected tokens')
+@admin.action(description="Blacklist selected tokens")
 def blacklist_selected_tokens(modeladmin, request, queryset):
     count = _blacklist(queryset)
-    modeladmin.message_user(request, f'Blacklisted {count} token(s).')
+    modeladmin.message_user(request, f"Blacklisted {count} token(s).")
 
 
 admin.site.unregister(OutstandingToken)
