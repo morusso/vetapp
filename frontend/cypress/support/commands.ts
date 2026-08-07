@@ -27,7 +27,7 @@ Cypress.Commands.add(
     cy.session(
       [email, password],
       () => {
-        cy.request("POST", `${Cypress.env("apiUrl")}/api/token/`, {
+        cy.request("POST", `${Cypress.env("apiUrl")}/api/v1/token/`, {
           email,
           password,
         }).then(({ body }) => {
@@ -49,7 +49,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.add("apiRequest", (method, path, body, options = {}) => {
   return cy
-    .request("POST", `${Cypress.env("apiUrl")}/api/token/`, {
+    .request("POST", `${Cypress.env("apiUrl")}/api/v1/token/`, {
       email: Cypress.env("e2eUserEmail"),
       password: Cypress.env("e2eUserPassword"),
     })

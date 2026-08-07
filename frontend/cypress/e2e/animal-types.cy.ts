@@ -33,7 +33,7 @@ describe("Animal types CRUD", () => {
   it("shows a validation error for a duplicate name", () => {
     const name = `Cypress duplicate ${Date.now()}`;
 
-    cy.apiRequest<{ id: number }>("POST", "/api/animals/types/", { name }).then(
+    cy.apiRequest<{ id: number }>("POST", "/api/v1/animals/types/", { name }).then(
       ({ body }) => {
         cy.visit("/animal-types/new");
         cy.get("#name").type(name);
@@ -42,7 +42,7 @@ describe("Animal types CRUD", () => {
         cy.get("#name").parent().should("contain.text", "already exists");
         cy.url().should("include", "/animal-types/new");
 
-        cy.apiRequest("DELETE", `/api/animals/types/${body.id}/`);
+        cy.apiRequest("DELETE", `/api/v1/animals/types/${body.id}/`);
       }
     );
   });

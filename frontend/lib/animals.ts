@@ -1,4 +1,4 @@
-import { API_URL } from "./auth";
+import { API_V1_URL } from "./auth";
 import { ApiError, request, type Paginated } from "./api";
 
 export { ApiError };
@@ -22,8 +22,8 @@ export type Animal = {
   updated_at: string;
 };
 
-const ANIMAL_TYPES_URL = `${API_URL}/api/animals/types/`;
-const ANIMALS_URL = `${API_URL}/api/animals/`;
+const ANIMAL_TYPES_URL = `${API_V1_URL}/animals/types/`;
+const ANIMALS_URL = `${API_V1_URL}/animals/`;
 
 export function listAnimalTypes(url: string = ANIMAL_TYPES_URL) {
   return request<Paginated<AnimalType>>(url);

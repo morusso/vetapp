@@ -1,4 +1,4 @@
-import { API_URL } from "./auth";
+import { API_V1_URL } from "./auth";
 import { request, type Paginated } from "./api";
 
 export type Client = {
@@ -26,7 +26,7 @@ export type ClientInput = {
   notes?: string;
 };
 
-const CLIENTS_URL = `${API_URL}/api/clients/`;
+const CLIENTS_URL = `${API_V1_URL}/clients/`;
 
 export function listClients(url: string = CLIENTS_URL) {
   return request<Paginated<Client>>(url);

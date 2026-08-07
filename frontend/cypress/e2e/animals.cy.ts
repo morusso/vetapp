@@ -3,7 +3,7 @@ describe("Animals CRUD", () => {
   const animalTypeName = `Cypress fixture type ${Date.now()}`;
 
   before(() => {
-    cy.apiRequest<{ id: number }>("POST", "/api/animals/types/", {
+    cy.apiRequest<{ id: number }>("POST", "/api/v1/animals/types/", {
       name: animalTypeName,
     }).then(({ body }) => {
       animalTypeId = body.id;
@@ -11,7 +11,7 @@ describe("Animals CRUD", () => {
   });
 
   after(() => {
-    cy.apiRequest("DELETE", `/api/animals/types/${animalTypeId}/`, undefined, {
+    cy.apiRequest("DELETE", `/api/v1/animals/types/${animalTypeId}/`, undefined, {
       failOnStatusCode: false,
     });
   });

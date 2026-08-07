@@ -34,14 +34,14 @@ def sample_client(db):
 
 @pytest.mark.django_db
 def test_client_list_requires_authentication(client):
-    response = client.get("/api/clients/")
+    response = client.get("/api/v1/clients/")
     assert response.status_code == 401
 
 
 @pytest.mark.django_db
 def test_client_create(auth_client):
     response = auth_client.post(
-        "/api/clients/",
+        "/api/v1/clients/",
         {
             "first_name": "Anna",
             "last_name": "Nowak",
@@ -58,14 +58,14 @@ def test_client_create(auth_client):
 
 @pytest.mark.django_db
 def test_client_list(auth_client, sample_client):
-    response = auth_client.get("/api/clients/")
+    response = auth_client.get("/api/v1/clients/")
     assert response.status_code == 200
     assert response.data["count"] == 1
 
 
 @pytest.mark.django_db
 def test_client_retrieve(auth_client, sample_client):
-    response = auth_client.get(f"/api/clients/{sample_client.pk}/")
+    response = auth_client.get(f"/api/v1/clients/{sample_client.pk}/")
     assert response.status_code == 200
     assert response.data["last_name"] == "Kowalski"
 
@@ -73,7 +73,7 @@ def test_client_retrieve(auth_client, sample_client):
 @pytest.mark.django_db
 def test_client_update(auth_client, sample_client):
     response = auth_client.patch(
-        f"/api/clients/{sample_client.pk}/",
+        f"/api/v1/clients/{sample_client.pk}/",
         {"city": "Gdansk"},
         content_type="application/json",
     )
@@ -84,6 +84,6 @@ def test_client_update(auth_client, sample_client):
 
 @pytest.mark.django_db
 def test_client_delete(auth_client, sample_client):
-    response = auth_client.delete(f"/api/clients/{sample_client.pk}/")
+    response = auth_client.delete(f"/api/v1/clients/{sample_client.pk}/")
     assert response.status_code == 204
     assert not Client.objects.filter(pk=sample_client.pk).exists()

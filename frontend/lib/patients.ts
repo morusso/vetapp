@@ -1,4 +1,4 @@
-import { API_URL } from "./auth";
+import { API_V1_URL } from "./auth";
 import { request, type Paginated } from "./api";
 
 export type Sex = "male" | "female" | "unknown";
@@ -50,8 +50,8 @@ export type PatientWeightInput = {
   recorded_at: string;
 };
 
-const PATIENTS_URL = `${API_URL}/api/animals/patients/`;
-const PATIENT_WEIGHTS_URL = `${API_URL}/api/animals/patients/weights/`;
+const PATIENTS_URL = `${API_V1_URL}/animals/patients/`;
+const PATIENT_WEIGHTS_URL = `${API_V1_URL}/animals/patients/weights/`;
 
 export function listPatients(url: string = PATIENTS_URL) {
   return request<Paginated<Patient>>(url);
