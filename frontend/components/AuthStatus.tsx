@@ -20,6 +20,12 @@ export default function AuthStatus() {
 
   return (
     <div className="flex items-center gap-4">
+      <Link href="/animal-types" className="text-sm font-medium underline">
+        Animal types
+      </Link>
+      <Link href="/animals" className="text-sm font-medium underline">
+        Animals
+      </Link>
       <Link href="/change-password" className="text-sm font-medium underline">
         Change password
       </Link>

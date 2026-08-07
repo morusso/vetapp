@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const ACCESS_TOKEN_KEY = "vetapp_access_token";
 const REFRESH_TOKEN_KEY = "vetapp_refresh_token";
