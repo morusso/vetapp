@@ -1,8 +1,12 @@
+from datetime import date
+from decimal import Decimal
+
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from animals.models import Animal, AnimalType
+from animals.models import Animal, AnimalType, Patient, PatientWeight
+from clients.models import Client
 
 User = get_user_model()
 
@@ -22,6 +26,36 @@ def auth_client(client, user):
 @pytest.fixture
 def animal_type(db):
     return AnimalType.objects.create(name="Dog")
+
+
+@pytest.fixture
+def owner(db):
+    return Client.objects.create(
+        first_name="Jan",
+        last_name="Kowalski",
+        email="jan.kowalski@example.com",
+        phone_number="123456789",
+        street="Polna 1",
+        city="Warszawa",
+        postal_code="00-001",
+    )
+
+
+@pytest.fixture
+def breed(animal_type):
+    return Animal.objects.create(name="Labrador", animal_type=animal_type)
+
+
+@pytest.fixture
+def patient(owner, breed):
+    return Patient.objects.create(name="Burek", owner=owner, breed=breed)
+
+
+@pytest.fixture
+def patient_weight(patient):
+    return PatientWeight.objects.create(
+        patient=patient, weight_kg=Decimal("12.50"), recorded_at=date(2026, 1, 1)
+    )
 
 
 @pytest.mark.django_db
@@ -122,3 +156,108 @@ def test_animal_delete(auth_client, animal_type):
     response = auth_client.delete(f"/api/animals/{animal.pk}/")
     assert response.status_code == 204
     assert not Animal.objects.filter(pk=animal.pk).exists()
+
+
+@pytest.mark.django_db
+def test_patient_list_requires_authentication(client):
+    response = client.get("/api/animals/patients/")
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_patient_create(auth_client, owner, breed):
+    response = auth_client.post(
+        "/api/animals/patients/",
+        {
+            "name": "Reksio",
+            "owner": owner.pk,
+            "breed": breed.pk,
+            "sex": "male",
+        },
+    )
+    assert response.status_code == 201
+    assert Patient.objects.filter(name="Reksio").exists()
+
+
+@pytest.mark.django_db
+def test_patient_list(auth_client, patient):
+    response = auth_client.get("/api/animals/patients/")
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["breed_name"] == "Labrador"
+    assert response.data["results"][0]["owner_name"] == "Jan Kowalski"
+
+
+@pytest.mark.django_db
+def test_patient_retrieve(auth_client, patient):
+    response = auth_client.get(f"/api/animals/patients/{patient.pk}/")
+    assert response.status_code == 200
+    assert response.data["name"] == "Burek"
+
+
+@pytest.mark.django_db
+def test_patient_update(auth_client, patient):
+    response = auth_client.patch(
+        f"/api/animals/patients/{patient.pk}/",
+        {"is_sterilized": True},
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    patient.refresh_from_db()
+    assert patient.is_sterilized is True
+
+
+@pytest.mark.django_db
+def test_patient_delete(auth_client, patient):
+    response = auth_client.delete(f"/api/animals/patients/{patient.pk}/")
+    assert response.status_code == 204
+    assert not Patient.objects.filter(pk=patient.pk).exists()
+
+
+@pytest.mark.django_db
+def test_patient_weight_list_requires_authentication(client):
+    response = client.get("/api/animals/patients/weights/")
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_patient_weight_create(auth_client, patient):
+    response = auth_client.post(
+        "/api/animals/patients/weights/",
+        {"patient": patient.pk, "weight_kg": "13.20", "recorded_at": "2026-02-01"},
+    )
+    assert response.status_code == 201
+    assert PatientWeight.objects.filter(patient=patient).count() == 1
+
+
+@pytest.mark.django_db
+def test_patient_weight_list(auth_client, patient_weight):
+    response = auth_client.get("/api/animals/patients/weights/")
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+
+
+@pytest.mark.django_db
+def test_patient_weight_retrieve(auth_client, patient_weight):
+    response = auth_client.get(f"/api/animals/patients/weights/{patient_weight.pk}/")
+    assert response.status_code == 200
+    assert response.data["weight_kg"] == "12.50"
+
+
+@pytest.mark.django_db
+def test_patient_weight_update(auth_client, patient_weight):
+    response = auth_client.patch(
+        f"/api/animals/patients/weights/{patient_weight.pk}/",
+        {"weight_kg": "12.80"},
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    patient_weight.refresh_from_db()
+    assert str(patient_weight.weight_kg) == "12.80"
+
+
+@pytest.mark.django_db
+def test_patient_weight_delete(auth_client, patient_weight):
+    response = auth_client.delete(f"/api/animals/patients/weights/{patient_weight.pk}/")
+    assert response.status_code == 204
+    assert not PatientWeight.objects.filter(pk=patient_weight.pk).exists()

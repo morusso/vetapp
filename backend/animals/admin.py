@@ -20,7 +20,12 @@ class AnimalAdmin(admin.ModelAdmin):
 class PatientAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "breed", "sex", "is_deceased")
     list_filter = ("sex", "is_sterilized", "is_deceased", "breed__animal_type")
-    search_fields = ("name", "microchip_number", "owner__first_name", "owner__last_name")
+    search_fields = (
+        "name",
+        "microchip_number",
+        "owner__first_name",
+        "owner__last_name",
+    )
 
 
 @admin.register(PatientWeight)
