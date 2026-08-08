@@ -1,4 +1,7 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Endpoints are versioned independently on the backend; this is just today's
+// default for resources that are still on v1.
+export const API_V1_URL = `${API_URL}/api/v1`;
 
 const ACCESS_TOKEN_KEY = "vetapp_access_token";
 const REFRESH_TOKEN_KEY = "vetapp_refresh_token";
@@ -50,7 +53,7 @@ export function decodeExpiry(token: string): number | null {
 }
 
 export async function login(email: string, password: string): Promise<TokenPair> {
-  const res = await fetch(`${API_URL}/api/token/`, {
+  const res = await fetch(`${API_V1_URL}/token/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -71,7 +74,7 @@ export async function refreshAccessToken(): Promise<string> {
     throw new RefreshError("No refresh token available.");
   }
 
-  const res = await fetch(`${API_URL}/api/token/refresh/`, {
+  const res = await fetch(`${API_V1_URL}/token/refresh/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh }),
@@ -92,7 +95,7 @@ export async function changePassword(
   oldPassword: string,
   newPassword: string
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/api/user/change-password/`, {
+  const res = await fetch(`${API_V1_URL}/user/change-password/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -116,7 +119,7 @@ export async function logout(): Promise<void> {
   clearTokens();
 
   if (refresh) {
-    await fetch(`${API_URL}/api/user/logout/`, {
+    await fetch(`${API_V1_URL}/user/logout/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),

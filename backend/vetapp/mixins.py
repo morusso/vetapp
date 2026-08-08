@@ -1,8 +1,32 @@
 import logging
+
+from django.http import Http404
 from rest_framework import status
 from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
+
+
+class RepositoryAPIViewMixin:
+    repository_class = None
+
+    @property
+    def repository(self):
+        return self.repository_class()
+
+    def get_queryset(self):
+        return self.repository.list()
+
+    def get_object(self):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        obj = self.repository.get(self.kwargs[lookup_url_kwarg])
+        if obj is None:
+            raise Http404
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def perform_destroy(self, instance):
+        self.repository.delete(instance.id)
 
 
 class GenericErrorHandlingMixin:

@@ -1,6 +1,6 @@
 async function getHealth() {
   try {
-    const res = await fetch(`${process.env.API_INTERNAL_URL}/api/health/`, {
+    const res = await fetch(`${process.env.API_INTERNAL_URL}/api/v1/health/`, {
       cache: "no-store",
     });
     if (!res.ok) return { status: "error" };

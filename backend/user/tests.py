@@ -26,7 +26,7 @@ def user(db):
 
 @pytest.mark.django_db
 def test_health_is_public(client):
-    response = client.get("/api/health/")
+    response = client.get("/api/v1/health/")
     assert response.status_code == 200
 
 
@@ -58,7 +58,7 @@ def test_protected_view_accepts_valid_access_token(user):
 @pytest.mark.django_db
 def test_obtain_token_pair(client, user):
     response = client.post(
-        "/api/token/", {"email": "vet@example.com", "password": "s3cr3t-pass"}
+        "/api/v1/token/", {"email": "vet@example.com", "password": "s3cr3t-pass"}
     )
     assert response.status_code == 200
     assert "access" in response.data
@@ -69,18 +69,18 @@ def test_obtain_token_pair(client, user):
 def test_logout_blacklists_refresh_token(client, user):
     refresh = RefreshToken.for_user(user)
 
-    response = client.post("/api/user/logout/", {"refresh": str(refresh)})
+    response = client.post("/api/v1/user/logout/", {"refresh": str(refresh)})
     assert response.status_code == 205
     assert BlacklistedToken.objects.filter(token__jti=refresh["jti"]).exists()
 
-    refresh_response = client.post("/api/token/refresh/", {"refresh": str(refresh)})
+    refresh_response = client.post("/api/v1/token/refresh/", {"refresh": str(refresh)})
     assert refresh_response.status_code == 401
 
 
 @pytest.mark.django_db
 def test_change_password_requires_authentication(client):
     response = client.post(
-        "/api/user/change-password/",
+        "/api/v1/user/change-password/",
         {"old_password": "s3cr3t-pass", "new_password": "n3w-s3cr3t-pass"},
     )
     assert response.status_code == 401
@@ -91,7 +91,7 @@ def test_change_password_rejects_wrong_old_password(client, user):
     access_token = RefreshToken.for_user(user).access_token
 
     response = client.post(
-        "/api/user/change-password/",
+        "/api/v1/user/change-password/",
         {"old_password": "wrong-pass", "new_password": "n3w-s3cr3t-pass"},
         HTTP_AUTHORIZATION=f"Bearer {access_token}",
     )
@@ -105,7 +105,7 @@ def test_change_password_rejects_weak_new_password(client, user):
     access_token = RefreshToken.for_user(user).access_token
 
     response = client.post(
-        "/api/user/change-password/",
+        "/api/v1/user/change-password/",
         {"old_password": "s3cr3t-pass", "new_password": "12345678"},
         HTTP_AUTHORIZATION=f"Bearer {access_token}",
     )
@@ -119,7 +119,7 @@ def test_change_password_success_updates_credentials(client, user):
     access_token = RefreshToken.for_user(user).access_token
 
     response = client.post(
-        "/api/user/change-password/",
+        "/api/v1/user/change-password/",
         {"old_password": "s3cr3t-pass", "new_password": "n3w-s3cr3t-pass"},
         HTTP_AUTHORIZATION=f"Bearer {access_token}",
     )
@@ -129,12 +129,12 @@ def test_change_password_success_updates_credentials(client, user):
     assert user.check_password("n3w-s3cr3t-pass")
 
     old_login = client.post(
-        "/api/token/", {"email": "vet@example.com", "password": "s3cr3t-pass"}
+        "/api/v1/token/", {"email": "vet@example.com", "password": "s3cr3t-pass"}
     )
     assert old_login.status_code == 401
 
     new_login = client.post(
-        "/api/token/", {"email": "vet@example.com", "password": "n3w-s3cr3t-pass"}
+        "/api/v1/token/", {"email": "vet@example.com", "password": "n3w-s3cr3t-pass"}
     )
     assert new_login.status_code == 200
 
@@ -145,13 +145,13 @@ def test_change_password_blacklists_existing_refresh_tokens(client, user):
     access_token = refresh.access_token
 
     response = client.post(
-        "/api/user/change-password/",
+        "/api/v1/user/change-password/",
         {"old_password": "s3cr3t-pass", "new_password": "n3w-s3cr3t-pass"},
         HTTP_AUTHORIZATION=f"Bearer {access_token}",
     )
     assert response.status_code == 204
 
-    refresh_response = client.post("/api/token/refresh/", {"refresh": str(refresh)})
+    refresh_response = client.post("/api/v1/token/refresh/", {"refresh": str(refresh)})
     assert refresh_response.status_code == 401
 
 

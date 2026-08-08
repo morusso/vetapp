@@ -19,12 +19,12 @@ export default function EditPatientPage() {
   }, [id]);
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-10 p-8">
-      <div className="flex flex-col items-center gap-6">
-        <h1 className="text-2xl font-semibold">Edit patient</h1>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {patient && (
+    <main className="flex flex-1 flex-col items-center gap-6 p-6">
+      {error && <p className="text-sm text-danger">{error}</p>}
+      {patient && (
+        <>
           <PatientForm
+            title="Edit patient"
             initialValues={{
               name: patient.name,
               owner: String(patient.owner),
@@ -44,10 +44,9 @@ export default function EditPatientPage() {
               router.push("/patients");
             }}
           />
-        )}
-      </div>
-
-      {patient && <WeightHistory patientId={patient.id} />}
+          <WeightHistory patientId={patient.id} />
+        </>
+      )}
     </main>
   );
 }

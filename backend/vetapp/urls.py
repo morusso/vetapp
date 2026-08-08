@@ -1,19 +1,3 @@
-"""
-URL configuration for vetapp project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import (
@@ -24,14 +8,32 @@ from rest_framework_simplejwt.views import (
 
 from vetapp import views
 
+# Each API version is wired up explicitly, per resource, rather than captured
+# as a URL parameter. A new version for a single resource (e.g.
+# 'api/v2/animals/patients/' -> 'animals.urls.patients_v2') can be introduced
+# without affecting any other resource's URLs or version.
+V1 = {'version': 'v1'}
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/health/', views.HealthView.as_view(), name='api-health'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('api/user/', include('user.urls')),
-    path('api/clinical-data/', include('clinical_data.urls')),
-    path('api/animals/', include('animals.urls')),
-    path('api/clients/', include('clients.urls')),
+    path('api/v1/health/', views.HealthView.as_view(), V1, name='api-health'),
+    path(
+        'api/v1/token/', TokenObtainPairView.as_view(), V1, name='token_obtain_pair'
+    ),
+    path(
+        'api/v1/token/refresh/',
+        TokenRefreshView.as_view(),
+        V1,
+        name='token_refresh',
+    ),
+    path(
+        'api/v1/token/verify/', TokenVerifyView.as_view(), V1, name='token_verify'
+    ),
+    path('api/v1/user/', include('user.urls.logout_v1'), V1),
+    path('api/v1/user/', include('user.urls.change_password_v1'), V1),
+    path('api/v1/clinical-data/', include('clinical_data.urls_v1'), V1),
+    path('api/v1/animals/types/', include('animals.urls.types_v1'), V1),
+    path('api/v1/animals/patients/', include('animals.urls.patients_v1'), V1),
+    path('api/v1/animals/', include('animals.urls.animals_v1'), V1),
+    path('api/v1/clients/', include('clients.urls_v1'), V1),
 ]

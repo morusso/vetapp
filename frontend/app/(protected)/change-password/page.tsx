@@ -40,85 +40,94 @@ export default function ChangePasswordPage() {
     }
   }
 
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">Change password</h1>
+  const inputClass =
+    "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
 
+  return (
+    <main className="flex flex-1 justify-center p-6">
       <form
         onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4"
+        className="w-full max-w-sm rounded-lg border border-line bg-surface shadow-sm"
       >
-        <div className="flex flex-col gap-1">
-          <label htmlFor="old-password" className="text-sm font-medium">
-            Current password
-          </label>
-          <input
-            id="old-password"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          {fieldErrors.old_password?.map((msg) => (
-            <p key={msg} className="text-sm text-red-600">
-              {msg}
-            </p>
-          ))}
+        <div className="border-b border-line px-6 py-4">
+          <h1 className="text-base font-semibold">Change password</h1>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="new-password" className="text-sm font-medium">
-            New password
-          </label>
-          <input
-            id="new-password"
-            type="password"
-            required
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          {fieldErrors.new_password?.map((msg) => (
-            <p key={msg} className="text-sm text-red-600">
-              {msg}
-            </p>
-          ))}
+        <div className="flex flex-col gap-4 px-6 py-5">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="old-password" className="text-xs font-semibold text-ink-muted">
+              Current password
+            </label>
+            <input
+              id="old-password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              className={inputClass}
+            />
+            {fieldErrors.old_password?.map((msg) => (
+              <p key={msg} className="text-xs text-danger">
+                {msg}
+              </p>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="new-password" className="text-xs font-semibold text-ink-muted">
+              New password
+            </label>
+            <input
+              id="new-password"
+              type="password"
+              required
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className={inputClass}
+            />
+            {fieldErrors.new_password?.map((msg) => (
+              <p key={msg} className="text-xs text-danger">
+                {msg}
+              </p>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="new-password-confirm" className="text-xs font-semibold text-ink-muted">
+              Confirm new password
+            </label>
+            <input
+              id="new-password-confirm"
+              type="password"
+              required
+              autoComplete="new-password"
+              value={newPasswordConfirm}
+              onChange={(e) => setNewPasswordConfirm(e.target.value)}
+              className={inputClass}
+            />
+            {fieldErrors.new_password_confirm?.map((msg) => (
+              <p key={msg} className="text-xs text-danger">
+                {msg}
+              </p>
+            ))}
+          </div>
+
+          {fieldErrors.detail && (
+            <p className="text-sm text-danger">{fieldErrors.detail.join(" ")}</p>
+          )}
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="new-password-confirm" className="text-sm font-medium">
-            Confirm new password
-          </label>
-          <input
-            id="new-password-confirm"
-            type="password"
-            required
-            autoComplete="new-password"
-            value={newPasswordConfirm}
-            onChange={(e) => setNewPasswordConfirm(e.target.value)}
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          {fieldErrors.new_password_confirm?.map((msg) => (
-            <p key={msg} className="text-sm text-red-600">
-              {msg}
-            </p>
-          ))}
+        <div className="flex justify-end gap-2 border-t border-line px-6 py-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          >
+            {isSubmitting ? "Changing…" : "Change password"}
+          </button>
         </div>
-
-        {fieldErrors.detail && (
-          <p className="text-sm text-red-600">{fieldErrors.detail.join(" ")}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          {isSubmitting ? "Changing…" : "Change password"}
-        </button>
       </form>
     </main>
   );

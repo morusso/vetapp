@@ -8,9 +8,9 @@ export default function NewAnimalPage() {
   const router = useRouter();
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">New animal</h1>
+    <main className="flex flex-1 justify-center p-6">
       <AnimalForm
+        title="New animal"
         initialValues={{ name: "", animal_type: "", description: "" }}
         submitLabel="Create"
         onSubmit={async (values) => {
