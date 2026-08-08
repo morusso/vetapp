@@ -8,9 +8,9 @@ from src.repositories.base import Repository
 from src.repositories.clients import client_to_dataclass
 
 PATIENT_RELATIONS = ("owner", "breed", "breed__animal_type")
-PATIENT_WEIGHT_RELATIONS = tuple(f"patient__{relation}" for relation in PATIENT_RELATIONS) + (
-    "patient",
-)
+PATIENT_WEIGHT_RELATIONS = tuple(
+    f"patient__{relation}" for relation in PATIENT_RELATIONS
+) + ("patient",)
 
 
 def animal_type_to_dataclass(obj: AnimalTypeModel) -> AnimalType:
@@ -74,7 +74,9 @@ class AnimalTypeRepository(Repository[AnimalType]):
         return [animal_type_to_dataclass(obj) for obj in AnimalTypeModel.objects.all()]
 
     def add(self, entity: AnimalType) -> AnimalType:
-        obj = AnimalTypeModel.objects.create(name=entity.name, description=entity.description)
+        obj = AnimalTypeModel.objects.create(
+            name=entity.name, description=entity.description
+        )
         return animal_type_to_dataclass(obj)
 
     def update(self, entity: AnimalType) -> AnimalType:
@@ -219,9 +221,9 @@ class PatientRepository(Repository[Patient]):
 class PatientWeightRepository(Repository[PatientWeight]):
     def get(self, id: int) -> PatientWeight | None:
         try:
-            obj = PatientWeightModel.objects.select_related(*PATIENT_WEIGHT_RELATIONS).get(
-                id=id
-            )
+            obj = PatientWeightModel.objects.select_related(
+                *PATIENT_WEIGHT_RELATIONS
+            ).get(id=id)
         except PatientWeightModel.DoesNotExist:
             return None
         return patient_weight_to_dataclass(obj)
@@ -229,7 +231,9 @@ class PatientWeightRepository(Repository[PatientWeight]):
     def list(self) -> list[PatientWeight]:
         return [
             patient_weight_to_dataclass(obj)
-            for obj in PatientWeightModel.objects.select_related(*PATIENT_WEIGHT_RELATIONS).all()
+            for obj in PatientWeightModel.objects.select_related(
+                *PATIENT_WEIGHT_RELATIONS
+            ).all()
         ]
 
     def add(self, entity: PatientWeight) -> PatientWeight:

@@ -25,7 +25,9 @@ def user_to_dataclass(obj: UserModel) -> User:
         is_active=obj.is_active,
         is_superuser=obj.is_superuser,
         date_joined=obj.date_joined,
-        specializations=[specialization_to_dataclass(s) for s in obj.specializations.all()],
+        specializations=[
+            specialization_to_dataclass(s) for s in obj.specializations.all()
+        ],
     )
 
 
@@ -37,7 +39,10 @@ class SpecializationRepository(Repository[Specialization]):
             return None
 
     def list(self) -> list[Specialization]:
-        return [specialization_to_dataclass(obj) for obj in SpecializationModel.objects.all()]
+        return [
+            specialization_to_dataclass(obj)
+            for obj in SpecializationModel.objects.all()
+        ]
 
     def add(self, entity: Specialization) -> Specialization:
         obj = SpecializationModel.objects.create(name=entity.name)
