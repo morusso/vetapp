@@ -1,6 +1,42 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
+from user.models import Specialization, User
+
+
+class SpecializationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Specialization
+        fields = ["id", "name", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    specializations = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Specialization.objects.all(), required=False
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "specializations",
+            "is_staff",
+            "is_active",
+            "date_joined",
+        ]
+        read_only_fields = ["id", "date_joined"]
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)

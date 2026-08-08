@@ -4,7 +4,7 @@ from rest_framework_simplejwt.token_blacklist.admin import OutstandingTokenAdmin
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from user.forms import UserChangeForm, UserCreationForm
-from user.models import User
+from user.models import Specialization, User
 from user.tokens import blacklist_tokens as _blacklist
 
 
@@ -21,7 +21,10 @@ class UserAdmin(DjangoUserAdmin):
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Personal info", {"fields": ("first_name", "last_name")}),
+        (
+            "Personal info",
+            {"fields": ("first_name", "last_name", "phone_number", "specializations")},
+        ),
         (
             "Permissions",
             {
@@ -40,13 +43,19 @@ class UserAdmin(DjangoUserAdmin):
         (None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),
     )
 
-    list_display = ("email", "first_name", "last_name", "is_staff")
-    list_filter = ("is_staff", "is_superuser", "is_active", "groups")
-    search_fields = ("email", "first_name", "last_name")
+    list_display = ("email", "first_name", "last_name", "phone_number", "is_staff")
+    list_filter = ("is_staff", "is_superuser", "is_active", "groups", "specializations")
+    search_fields = ("email", "first_name", "last_name", "phone_number")
     ordering = ("email",)
-    filter_horizontal = ("groups", "user_permissions")
+    filter_horizontal = ("groups", "user_permissions", "specializations")
 
     actions = [*DjangoUserAdmin.actions, revoke_all_tokens]
+
+
+@admin.register(Specialization)
+class SpecializationAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at", "updated_at")
+    search_fields = ("name",)
 
 
 @admin.action(description="Blacklist selected tokens")

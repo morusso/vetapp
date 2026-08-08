@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/");
+      router.replace("/dashboard");
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       setError(
         err instanceof LoginError

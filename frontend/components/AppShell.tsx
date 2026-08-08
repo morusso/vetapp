@@ -12,6 +12,7 @@ import {
   LogoutIcon,
   PasswordIcon,
   PatientsIcon,
+  UsersIcon,
 } from "@/components/icons";
 
 const NAV_ITEMS = [
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/patients", label: "Patients", icon: PatientsIcon },
   { href: "/animals", label: "Animals", icon: AnimalsIcon },
   { href: "/animal-types", label: "Animal types", icon: AnimalTypesIcon },
+  { href: "/users", label: "Users", icon: UsersIcon },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

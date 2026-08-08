@@ -1,11 +1,18 @@
 import Link from "next/link";
-import { AnimalsIcon, AnimalTypesIcon, ClientsIcon, PatientsIcon } from "@/components/icons";
+import {
+  AnimalsIcon,
+  AnimalTypesIcon,
+  ClientsIcon,
+  PatientsIcon,
+  UsersIcon,
+} from "@/components/icons";
 
 const SHORTCUTS = [
   { href: "/clients", label: "Clients", description: "Registered pet owners", icon: ClientsIcon },
   { href: "/patients", label: "Patients", description: "Animals under care", icon: PatientsIcon },
   { href: "/animals", label: "Animals", description: "Breeds on file", icon: AnimalsIcon },
   { href: "/animal-types", label: "Animal types", description: "Species categories", icon: AnimalTypesIcon },
+  { href: "/users", label: "Users", description: "Staff accounts", icon: UsersIcon },
 ];
 
 export default function DashboardPage() {
