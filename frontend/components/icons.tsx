@@ -69,6 +69,16 @@ export function AnimalTypesIcon(props: IconProps) {
   );
 }
 
+export function UsersIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+      <circle cx="12" cy="10.5" r="2.5" />
+      <path d="M7.5 18c.5-2.5 2-3.5 4.5-3.5s4 1 4.5 3.5" />
+    </Icon>
+  );
+}
+
 export function PasswordIcon(props: IconProps) {
   return (
     <Icon {...props}>
