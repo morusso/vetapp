@@ -18,11 +18,11 @@ export default function EditClientPage() {
   }, [id]);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">Edit client</h1>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <main className="flex flex-1 justify-center p-6">
+      {error && <p className="text-sm text-danger">{error}</p>}
       {client && (
         <ClientForm
+          title="Edit client"
           initialValues={{
             first_name: client.first_name,
             last_name: client.last_name,

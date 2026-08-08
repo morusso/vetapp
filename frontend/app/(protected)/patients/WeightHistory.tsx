@@ -8,6 +8,7 @@ import {
   listAllPatientWeights,
   type PatientWeight,
 } from "@/lib/patients";
+import { TrashIcon } from "@/components/icons";
 
 export default function WeightHistory({ patientId }: { patientId: number }) {
   const [weights, setWeights] = useState<PatientWeight[]>([]);
@@ -60,72 +61,80 @@ export default function WeightHistory({ patientId }: { patientId: number }) {
     }
   }
 
+  const inputClass =
+    "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
+
   return (
-    <div className="flex w-full max-w-sm flex-col gap-4">
-      <h2 className="text-lg font-semibold">Weight history</h2>
+    <div className="w-full max-w-xl rounded-lg border border-line bg-surface shadow-sm">
+      <div className="border-b border-line px-6 py-4">
+        <h2 className="text-base font-semibold">Weight history</h2>
+      </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex flex-col gap-4 px-6 py-5">
+        {error && <p className="text-sm text-danger">{error}</p>}
 
-      <ul className="flex flex-col gap-2">
-        {weights.map((w) => (
-          <li
-            key={w.id}
-            className="flex items-center justify-between rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
-          >
-            <span>
-              {w.weight_kg} kg <span className="text-zinc-500">({w.recorded_at})</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => handleDelete(w.id)}
-              className="font-medium text-red-600 underline"
+        <ul className="flex flex-col gap-1.5">
+          {weights.map((w) => (
+            <li
+              key={w.id}
+              className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-sm"
             >
-              Delete
-            </button>
-          </li>
-        ))}
-        {weights.length === 0 && (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">No weight entries yet.</p>
-        )}
-      </ul>
+              <span className="font-mono">
+                {w.weight_kg} kg <span className="text-ink-faint">({w.recorded_at})</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => handleDelete(w.id)}
+                title="Delete"
+                className="flex size-7 items-center justify-center rounded-md text-ink-faint hover:bg-danger-soft hover:text-danger"
+              >
+                <TrashIcon />
+              </button>
+            </li>
+          ))}
+          {weights.length === 0 && (
+            <p className="py-2 text-sm text-ink-faint">No weight entries yet.</p>
+          )}
+        </ul>
 
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="weight_kg" className="text-sm font-medium">
-            Weight (kg)
-          </label>
-          <input
-            id="weight_kg"
-            type="number"
-            step="0.01"
-            min="0"
-            required
-            value={weightKg}
-            onChange={(e) => setWeightKg(e.target.value)}
-            className="w-24 rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="recorded_at" className="text-sm font-medium">
-            Date
-          </label>
-          <input
-            id="recorded_at"
-            type="date"
-            required
-            value={recordedAt}
-            onChange={(e) => setRecordedAt(e.target.value)}
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-        >
-          Add
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="flex items-end gap-2 border-t border-line pt-4">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="weight_kg" className="text-xs font-semibold text-ink-muted">
+              Weight (kg)
+            </label>
+            <input
+              id="weight_kg"
+              type="number"
+              step="0.01"
+              min="0"
+              required
+              value={weightKg}
+              onChange={(e) => setWeightKg(e.target.value)}
+              className={`${inputClass} w-24`}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="recorded_at" className="text-xs font-semibold text-ink-muted">
+              Date
+            </label>
+            <input
+              id="recorded_at"
+              type="date"
+              required
+              value={recordedAt}
+              onChange={(e) => setRecordedAt(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-md bg-accent px-3.5 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          >
+            Add
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

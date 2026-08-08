@@ -8,9 +8,9 @@ export default function NewClientPage() {
   const router = useRouter();
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">New client</h1>
+    <main className="flex flex-1 justify-center p-6">
       <ClientForm
+        title="New client"
         initialValues={{
           first_name: "",
           last_name: "",

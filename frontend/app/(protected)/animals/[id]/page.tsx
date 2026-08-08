@@ -18,11 +18,11 @@ export default function EditAnimalPage() {
   }, [id]);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">Edit animal</h1>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <main className="flex flex-1 justify-center p-6">
+      {error && <p className="text-sm text-danger">{error}</p>}
       {animal && (
         <AnimalForm
+          title="Edit animal"
           initialValues={{
             name: animal.name,
             animal_type: String(animal.animal_type),

@@ -8,10 +8,12 @@ export type AnimalFormValues = { name: string; animal_type: string; description:
 export default function AnimalForm({
   initialValues,
   submitLabel,
+  title,
   onSubmit,
 }: {
   initialValues: AnimalFormValues;
   submitLabel: string;
+  title: string;
   onSubmit: (values: { name: string; animal_type: number; description: string }) => Promise<void>;
 }) {
   const [values, setValues] = useState(initialValues);
@@ -42,81 +44,93 @@ export default function AnimalForm({
     }
   }
 
+  const inputClass =
+    "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
+
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
-          Name
-        </label>
-        <input
-          id="name"
-          required
-          value={values.name}
-          onChange={(e) => setValues({ ...values, name: e.target.value })}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-        {fieldErrors.name?.map((msg) => (
-          <p key={msg} className="text-sm text-red-600">
-            {msg}
-          </p>
-        ))}
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-xl rounded-lg border border-line bg-surface shadow-sm"
+    >
+      <div className="border-b border-line px-6 py-4">
+        <h2 className="text-base font-semibold">{title}</h2>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="animal_type" className="text-sm font-medium">
-          Animal type
-        </label>
-        <select
-          id="animal_type"
-          required
-          value={values.animal_type}
-          onChange={(e) => setValues({ ...values, animal_type: e.target.value })}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          <option value="" disabled>
-            Select an animal type
-          </option>
-          {animalTypes.map((animalType) => (
-            <option key={animalType.id} value={animalType.id}>
-              {animalType.name}
-            </option>
+      <div className="flex flex-col gap-5 px-6 py-5">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="name" className="text-xs font-semibold text-ink-muted">
+            Name *
+          </label>
+          <input
+            id="name"
+            required
+            value={values.name}
+            onChange={(e) => setValues({ ...values, name: e.target.value })}
+            className={inputClass}
+          />
+          {fieldErrors.name?.map((msg) => (
+            <p key={msg} className="text-xs text-danger">
+              {msg}
+            </p>
           ))}
-        </select>
-        {fieldErrors.animal_type?.map((msg) => (
-          <p key={msg} className="text-sm text-red-600">
-            {msg}
-          </p>
-        ))}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="animal_type" className="text-xs font-semibold text-ink-muted">
+            Animal type *
+          </label>
+          <select
+            id="animal_type"
+            required
+            value={values.animal_type}
+            onChange={(e) => setValues({ ...values, animal_type: e.target.value })}
+            className={inputClass}
+          >
+            <option value="" disabled>
+              Select an animal type
+            </option>
+            {animalTypes.map((animalType) => (
+              <option key={animalType.id} value={animalType.id}>
+                {animalType.name}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.animal_type?.map((msg) => (
+            <p key={msg} className="text-xs text-danger">
+              {msg}
+            </p>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="description" className="text-xs font-semibold text-ink-muted">
+            Description
+          </label>
+          <textarea
+            id="description"
+            value={values.description}
+            onChange={(e) => setValues({ ...values, description: e.target.value })}
+            className={`${inputClass} min-h-16 resize-y`}
+          />
+          {fieldErrors.description?.map((msg) => (
+            <p key={msg} className="text-xs text-danger">
+              {msg}
+            </p>
+          ))}
+        </div>
+
+        {fieldErrors.detail && <p className="text-sm text-danger">{fieldErrors.detail.join(" ")}</p>}
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm font-medium">
-          Description
-        </label>
-        <textarea
-          id="description"
-          value={values.description}
-          onChange={(e) => setValues({ ...values, description: e.target.value })}
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-        {fieldErrors.description?.map((msg) => (
-          <p key={msg} className="text-sm text-red-600">
-            {msg}
-          </p>
-        ))}
+      <div className="flex justify-end gap-2 border-t border-line px-6 py-4">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+        >
+          {isSubmitting ? "Saving…" : submitLabel}
+        </button>
       </div>
-
-      {fieldErrors.detail && (
-        <p className="text-sm text-red-600">{fieldErrors.detail.join(" ")}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-      >
-        {isSubmitting ? "Saving…" : submitLabel}
-      </button>
     </form>
   );
 }

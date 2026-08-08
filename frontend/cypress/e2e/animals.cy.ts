@@ -33,17 +33,17 @@ describe("Animals CRUD", () => {
     cy.contains("button", "Create").click();
 
     cy.url().should("match", /\/animals$/);
-    cy.contains("li", name).should("be.visible").and("contain.text", animalTypeName);
+    cy.contains("tr", name).should("be.visible").and("contain.text", animalTypeName);
 
-    cy.contains("li", name).contains("a", "Edit").click();
+    cy.contains("tr", name).find('[title="Edit"]').click();
     cy.get("#name").clear();
     cy.get("#name").type(editedName);
     cy.contains("button", "Save").click();
 
     cy.url().should("match", /\/animals$/);
-    cy.contains("li", editedName).should("be.visible");
+    cy.contains("tr", editedName).should("be.visible");
 
-    cy.contains("li", editedName).contains("button", "Delete").click();
-    cy.contains("li", editedName).should("not.exist");
+    cy.contains("tr", editedName).find('[title="Delete"]').click();
+    cy.contains("tr", editedName).should("not.exist");
   });
 });
