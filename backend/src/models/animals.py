@@ -25,6 +25,13 @@ class AnimalType:
     updated_at: datetime | None = field(default=None)
     animals: list[Animal] = field(default_factory=list)
 
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return self.name
+
 
 @dataclass(kw_only=True)
 class Animal:
@@ -35,6 +42,13 @@ class Animal:
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)
     patients: list[Patient] = field(default_factory=list)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @dataclass(kw_only=True)
@@ -55,6 +69,13 @@ class Patient:
     updated_at: datetime | None = field(default=None)
     weight_records: list[PatientWeight] = field(default_factory=list)
 
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return self.name
+
 
 @dataclass(kw_only=True)
 class PatientWeight:
@@ -63,3 +84,7 @@ class PatientWeight:
     weight_kg: Decimal
     recorded_at: date
     created_at: datetime | None = field(default=None)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id

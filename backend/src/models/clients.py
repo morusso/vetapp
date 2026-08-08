@@ -22,3 +22,10 @@ class Client:
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)
     patients: list[Patient] = field(default_factory=list)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
