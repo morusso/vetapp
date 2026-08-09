@@ -31,6 +31,7 @@ def medicine(db):
         form=Medicine.Form.TABLET,
         strength="50mg",
         unit="tablet",
+        minimum_stock_level=Decimal("10.00"),
     )
 
 
@@ -40,7 +41,6 @@ def medicine_batch(medicine):
         medicine=medicine,
         batch_number="B100",
         quantity=Decimal("50.00"),
-        minimum_stock_level=Decimal("10.00"),
         expiry_date=date(2027, 1, 1),
         received_at=date(2026, 1, 1),
     )
@@ -74,6 +74,7 @@ def test_medicine_retrieve(auth_client, medicine):
     response = auth_client.get(f"/api/v1/clinical-data/medicines/{medicine.pk}/")
     assert response.status_code == 200
     assert response.data["name"] == "Amoxicillin"
+    assert response.data["minimum_stock_level"] == "10.00"
 
 
 @pytest.mark.django_db
