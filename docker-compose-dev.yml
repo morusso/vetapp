@@ -31,6 +31,8 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_SCHEMA: vetapp
+      EMAIL_HOST: mailcatcher
+      EMAIL_PORT: 1025
     ports:
       - "8000:8000"
     volumes:
@@ -38,6 +40,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailcatcher:
+        condition: service_started
 
   frontend:
     build:
@@ -55,6 +59,15 @@ services:
       - vetapp_frontend_node_modules:/app/node_modules
     depends_on:
       - backend
+
+  mailcatcher:
+    image: schickling/mailcatcher
+    container_name: vetapp_mailcatcher
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1080:1080"
+      - "127.0.0.1:1025:1025"
+
 
 volumes:
   vetapp_frontend_node_modules:
