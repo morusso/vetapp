@@ -79,7 +79,7 @@ class Visit:
     diagnosis: str = field(default="")
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)
-    note: VisitNote | None = field(default=None)
+    notes: list[VisitNote] = field(default_factory=list)
     prescribed_medicines: list[PrescribedMedicine] = field(default_factory=list)
 
     @property

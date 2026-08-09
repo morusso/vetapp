@@ -199,18 +199,16 @@ def visit_to_dataclass(obj: VisitModel) -> Visit:
         created_at=obj.created_at,
         updated_at=obj.updated_at,
     )
-    try:
-        note_obj = obj.note
-    except VisitNoteModel.DoesNotExist:
-        note_obj = None
-    if note_obj is not None:
-        visit.note = VisitNote(
-            id=note_obj.id,
+    visit.notes = [
+        VisitNote(
+            id=note.id,
             visit=visit,
-            content=note_obj.content,
-            created_at=note_obj.created_at,
-            updated_at=note_obj.updated_at,
+            content=note.content,
+            created_at=note.created_at,
+            updated_at=note.updated_at,
         )
+        for note in obj.notes.all()
+    ]
     visit.prescribed_medicines = [
         PrescribedMedicine(
             id=pm.id,

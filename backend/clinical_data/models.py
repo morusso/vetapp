@@ -96,10 +96,13 @@ class Visit(models.Model):
 
 
 class VisitNote(models.Model):
-    visit = models.OneToOneField(Visit, on_delete=models.CASCADE, related_name="note")
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name="notes")
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"Note for {self.visit}"

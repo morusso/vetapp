@@ -95,8 +95,8 @@ class PrescribedMedicineSerializer(serializers.ModelSerializer):
 
 
 class VisitWithDetailsSerializer(VisitSerializer):
-    note = VisitNoteSerializer(read_only=True)
+    notes = VisitNoteSerializer(many=True, read_only=True)
     prescribed_medicines = PrescribedMedicineSerializer(many=True, read_only=True)
 
     class Meta(VisitSerializer.Meta):
-        fields = VisitSerializer.Meta.fields + ["note", "prescribed_medicines"]
+        fields = VisitSerializer.Meta.fields + ["notes", "prescribed_medicines"]

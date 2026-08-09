@@ -245,14 +245,15 @@ class TestVisitRepository:
         assert visit.patient.name == "Rex"
         assert visit.veterinarian.email == "vet@example.com"
         assert visit.diagnosis == "Routine checkup"
-        assert visit.note is None
+        assert visit.notes == []
         assert visit.prescribed_medicines == []
 
     @pytest.mark.django_db
-    def test_get_includes_note_and_prescribed_medicines(
+    def test_get_includes_notes_and_prescribed_medicines(
         self, visit_model, medicine_model
     ):
         VisitNoteModel.objects.create(visit=visit_model, content="Patient is healthy")
+        VisitNoteModel.objects.create(visit=visit_model, content="Follow-up in 2 weeks")
         PrescribedMedicineModel.objects.create(
             visit=visit_model,
             medicine=medicine_model,
@@ -262,7 +263,11 @@ class TestVisitRepository:
 
         visit = VisitRepository().get(visit_model.id)
 
-        assert visit.note.content == "Patient is healthy"
+        assert len(visit.notes) == 2
+        assert {n.content for n in visit.notes} == {
+            "Patient is healthy",
+            "Follow-up in 2 weeks",
+        }
         assert len(visit.prescribed_medicines) == 1
         assert visit.prescribed_medicines[0].medicine.name == "Amoxicillin"
         assert visit.prescribed_medicines[0].quantity == Decimal("2.00")

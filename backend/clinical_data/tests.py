@@ -279,8 +279,9 @@ def test_visit_filter_by_patient(auth_client, visit, patient, user):
 
 
 @pytest.mark.django_db
-def test_visit_detail_full_includes_note_and_medicines(auth_client, visit):
+def test_visit_detail_full_includes_notes_and_medicines(auth_client, visit):
     VisitNote.objects.create(visit=visit, content="Patient is healthy")
+    VisitNote.objects.create(visit=visit, content="Follow-up in 2 weeks")
     medicine = Medicine.objects.create(name="Amoxicillin", unit="tablet")
     PrescribedMedicine.objects.create(
         visit=visit, medicine=medicine, quantity=Decimal("2.00"), dosage="1x daily"
@@ -289,17 +290,21 @@ def test_visit_detail_full_includes_note_and_medicines(auth_client, visit):
     response = auth_client.get(f"/api/v1/clinical-data/visits/{visit.pk}/full/")
 
     assert response.status_code == 200
-    assert response.data["note"]["content"] == "Patient is healthy"
+    assert len(response.data["notes"]) == 2
+    assert {n["content"] for n in response.data["notes"]} == {
+        "Patient is healthy",
+        "Follow-up in 2 weeks",
+    }
     assert len(response.data["prescribed_medicines"]) == 1
     assert response.data["prescribed_medicines"][0]["medicine_name"] == "Amoxicillin"
 
 
 @pytest.mark.django_db
-def test_visit_detail_full_note_is_null_when_missing(auth_client, visit):
+def test_visit_detail_full_notes_empty_when_missing(auth_client, visit):
     response = auth_client.get(f"/api/v1/clinical-data/visits/{visit.pk}/full/")
 
     assert response.status_code == 200
-    assert response.data["note"] is None
+    assert response.data["notes"] == []
     assert response.data["prescribed_medicines"] == []
 
 
@@ -311,6 +316,21 @@ def test_visit_note_create(auth_client, visit):
     )
     assert response.status_code == 201
     assert VisitNote.objects.filter(visit=visit, content="No abnormalities found").exists()
+
+
+@pytest.mark.django_db
+def test_visit_note_create_allows_multiple_notes_per_visit(auth_client, visit):
+    auth_client.post(
+        "/api/v1/clinical-data/visits/notes/",
+        {"visit": visit.pk, "content": "First note"},
+    )
+    response = auth_client.post(
+        "/api/v1/clinical-data/visits/notes/",
+        {"visit": visit.pk, "content": "Second note"},
+    )
+
+    assert response.status_code == 201
+    assert VisitNote.objects.filter(visit=visit).count() == 2
 
 
 @pytest.mark.django_db
