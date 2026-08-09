@@ -69,6 +69,25 @@ export function AnimalTypesIcon(props: IconProps) {
   );
 }
 
+export function MedicinesIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6.5 17.5a5 5 0 0 1 0-7l4-4a5 5 0 0 1 7 7l-4 4a5 5 0 0 1-7 0Z" />
+      <path d="M9.5 8.5l6 6" />
+    </Icon>
+  );
+}
+
+export function StockBatchesIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 8l8-4 8 4-8 4-8-4Z" />
+      <path d="M4 8v8l8 4 8-4V8" />
+      <path d="M12 12v8" />
+    </Icon>
+  );
+}
+
 export function UsersIcon(props: IconProps) {
   return (
     <Icon {...props}>

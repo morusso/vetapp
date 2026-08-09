@@ -43,13 +43,17 @@ def owner_model(db):
 
 @pytest.fixture
 def patient_model(owner_model, animal_model):
-    return PatientModel.objects.create(name="Burek", owner=owner_model, breed=animal_model)
+    return PatientModel.objects.create(
+        name="Burek", owner=owner_model, breed=animal_model
+    )
 
 
 class TestAnimalTypeRepository:
     @pytest.mark.django_db
     def test_add_creates_animal_type(self):
-        animal_type = AnimalTypeRepository().add(AnimalType(name="Cat", description="Feline"))
+        animal_type = AnimalTypeRepository().add(
+            AnimalType(name="Cat", description="Feline")
+        )
 
         assert animal_type.id is not None
         assert AnimalTypeModel.objects.filter(name="Cat").exists()
@@ -146,7 +150,9 @@ class TestPatientRepository:
         owner = client_to_dataclass(owner_model)
         breed = AnimalRepository().get(animal_model.id)
 
-        patient = PatientRepository().add(Patient(name="Reksio", owner=owner, breed=breed))
+        patient = PatientRepository().add(
+            Patient(name="Reksio", owner=owner, breed=breed)
+        )
 
         assert patient.id is not None
         assert patient.owner == owner
@@ -208,7 +214,9 @@ class TestPatientWeightRepository:
 
         weight = PatientWeightRepository().add(
             PatientWeight(
-                patient=patient, weight_kg=Decimal("12.50"), recorded_at=date(2026, 1, 1)
+                patient=patient,
+                weight_kg=Decimal("12.50"),
+                recorded_at=date(2026, 1, 1),
             )
         )
 
@@ -221,7 +229,9 @@ class TestPatientWeightRepository:
     @pytest.mark.django_db
     def test_get_returns_weight_with_full_relation_graph(self, patient_model):
         weight_model = PatientWeightModel.objects.create(
-            patient=patient_model, weight_kg=Decimal("12.50"), recorded_at=date(2026, 1, 1)
+            patient=patient_model,
+            weight_kg=Decimal("12.50"),
+            recorded_at=date(2026, 1, 1),
         )
 
         weight = PatientWeightRepository().get(weight_model.id)
@@ -237,7 +247,9 @@ class TestPatientWeightRepository:
     @pytest.mark.django_db
     def test_list_returns_all(self, patient_model):
         PatientWeightModel.objects.create(
-            patient=patient_model, weight_kg=Decimal("12.50"), recorded_at=date(2026, 1, 1)
+            patient=patient_model,
+            weight_kg=Decimal("12.50"),
+            recorded_at=date(2026, 1, 1),
         )
 
         weights = PatientWeightRepository().list()
@@ -247,7 +259,9 @@ class TestPatientWeightRepository:
     @pytest.mark.django_db
     def test_update_persists_changes(self, patient_model):
         weight_model = PatientWeightModel.objects.create(
-            patient=patient_model, weight_kg=Decimal("12.50"), recorded_at=date(2026, 1, 1)
+            patient=patient_model,
+            weight_kg=Decimal("12.50"),
+            recorded_at=date(2026, 1, 1),
         )
         weight = PatientWeightRepository().get(weight_model.id)
 
@@ -267,7 +281,9 @@ class TestPatientWeightRepository:
     @pytest.mark.django_db
     def test_delete_removes_weight(self, patient_model):
         weight_model = PatientWeightModel.objects.create(
-            patient=patient_model, weight_kg=Decimal("12.50"), recorded_at=date(2026, 1, 1)
+            patient=patient_model,
+            weight_kg=Decimal("12.50"),
+            recorded_at=date(2026, 1, 1),
         )
 
         PatientWeightRepository().delete(weight_model.id)

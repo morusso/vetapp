@@ -12,7 +12,9 @@ def repo():
 
 @pytest.fixture
 def sample_user(db):
-    return UserModel.objects.create_user(email="vet@example.com", password="s3cr3t-pass")
+    return UserModel.objects.create_user(
+        email="vet@example.com", password="s3cr3t-pass"
+    )
 
 
 @pytest.mark.django_db
@@ -49,7 +51,9 @@ def test_list_returns_all_users(repo, sample_user):
 @pytest.mark.django_db
 def test_update_persists_changes(repo, sample_user):
     updated = repo.update(
-        User(id=sample_user.id, email=sample_user.email, first_name="Ala", is_staff=True)
+        User(
+            id=sample_user.id, email=sample_user.email, first_name="Ala", is_staff=True
+        )
     )
 
     assert updated.first_name == "Ala"
