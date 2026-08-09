@@ -23,4 +23,39 @@ urlpatterns = [
         views.MedicineBatchDetailView.as_view(),
         name="medicine_batch_detail",
     ),
+    path(
+        "visits/",
+        views.VisitListCreateView.as_view(),
+        name="visit_list_create",
+    ),
+    path(
+        "visits/<int:pk>/",
+        views.VisitDetailView.as_view(),
+        name="visit_detail",
+    ),
+    path(
+        "visits/<int:pk>/full/",
+        views.VisitDetailWithDetailsView.as_view(),
+        name="visit_detail_full",
+    ),
+    path(
+        "visits/notes/",
+        views.VisitNoteListCreateView.as_view(),
+        name="visit_note_list_create",
+    ),
+    path(
+        "visits/notes/<int:pk>/",
+        views.VisitNoteDetailView.as_view(),
+        name="visit_note_detail",
+    ),
+    path(
+        "visits/medicines/",
+        views.PrescribedMedicineListCreateView.as_view(),
+        name="prescribed_medicine_list_create",
+    ),
+    path(
+        "visits/medicines/<int:pk>/",
+        views.PrescribedMedicineDetailView.as_view(),
+        name="prescribed_medicine_detail",
+    ),
 ]

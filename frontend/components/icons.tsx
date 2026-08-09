@@ -78,6 +78,16 @@ export function MedicinesIcon(props: IconProps) {
   );
 }
 
+export function VisitsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6M9 17h4" />
+    </Icon>
+  );
+}
+
 export function StockBatchesIcon(props: IconProps) {
   return (
     <Icon {...props}>

@@ -41,6 +41,17 @@ export function listUsers(url: string = USERS_URL) {
   return request<Paginated<User>>(url);
 }
 
+export async function listAllUsers(): Promise<User[]> {
+  const all: User[] = [];
+  let url: string | undefined = USERS_URL;
+  while (url) {
+    const page = await listUsers(url);
+    all.push(...page.results);
+    url = page.next ?? undefined;
+  }
+  return all;
+}
+
 export function createUser(data: UserInput) {
   return request<User>(USERS_URL, {
     method: "POST",

@@ -1,12 +1,73 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
 
+from django.contrib.auth import get_user_model
+
+from animals.models import Animal as AnimalModel
+from animals.models import AnimalType as AnimalTypeModel
+from animals.models import Patient as PatientModel
+from clients.models import Client as ClientModel
 from clinical_data.models import Medicine as MedicineModel
 from clinical_data.models import MedicineBatch as MedicineBatchModel
-from src.models.clinical_data import Medicine, MedicineBatch, MedicineForm
-from src.repositories.clinical_data import MedicineBatchRepository, MedicineRepository
+from clinical_data.models import PrescribedMedicine as PrescribedMedicineModel
+from clinical_data.models import Visit as VisitModel
+from clinical_data.models import VisitNote as VisitNoteModel
+from src.models.clinical_data import (
+    Medicine,
+    MedicineBatch,
+    MedicineForm,
+    PrescribedMedicine,
+    Visit,
+    VisitNote,
+)
+from src.repositories.animals import patient_to_dataclass
+from src.repositories.clinical_data import (
+    MedicineBatchRepository,
+    MedicineRepository,
+    PrescribedMedicineRepository,
+    VisitNoteRepository,
+    VisitRepository,
+)
+from src.repositories.user import user_to_dataclass
+
+
+@pytest.fixture
+def owner_model(db):
+    return ClientModel.objects.create(
+        first_name="Jan",
+        last_name="Kowalski",
+        email="jan.kowalski@example.com",
+        phone_number="123456789",
+        street="Polna 1",
+        city="Warszawa",
+        postal_code="00-001",
+    )
+
+
+@pytest.fixture
+def patient_model(db, owner_model):
+    animal_type = AnimalTypeModel.objects.create(name="Dog")
+    breed = AnimalModel.objects.create(name="Labrador", animal_type=animal_type)
+    return PatientModel.objects.create(name="Rex", owner=owner_model, breed=breed)
+
+
+@pytest.fixture
+def veterinarian_model(db):
+    return get_user_model().objects.create_user(
+        email="vet@example.com", password="password123"
+    )
+
+
+@pytest.fixture
+def visit_model(db, patient_model, veterinarian_model):
+    return VisitModel.objects.create(
+        patient=patient_model,
+        veterinarian=veterinarian_model,
+        visit_date=datetime(2026, 1, 15, 10, 0),
+        diagnosis="Routine checkup",
+    )
 
 
 @pytest.fixture
@@ -155,3 +216,201 @@ class TestMedicineBatchRepository:
         assert not MedicineBatchModel.objects.filter(
             id=medicine_batch_model.id
         ).exists()
+
+
+class TestVisitRepository:
+    @pytest.mark.django_db
+    def test_add_creates_visit(self, patient_model, veterinarian_model):
+        visit = VisitRepository().add(
+            Visit(
+                patient=patient_to_dataclass(patient_model),
+                veterinarian=user_to_dataclass(veterinarian_model),
+                visit_date=datetime(2026, 2, 1, 9, 30),
+                diagnosis="Vaccination",
+            )
+        )
+
+        assert visit.id is not None
+        assert VisitModel.objects.filter(id=visit.id, diagnosis="Vaccination").exists()
+
+    @pytest.mark.django_db
+    def test_get_returns_none_for_missing(self):
+        assert VisitRepository().get(999999) is None
+
+    @pytest.mark.django_db
+    def test_get_returns_visit_with_nested_relations(self, visit_model):
+        visit = VisitRepository().get(visit_model.id)
+
+        assert visit is not None
+        assert visit.patient.name == "Rex"
+        assert visit.veterinarian.email == "vet@example.com"
+        assert visit.diagnosis == "Routine checkup"
+        assert visit.notes == []
+        assert visit.prescribed_medicines == []
+
+    @pytest.mark.django_db
+    def test_get_includes_notes_and_prescribed_medicines(
+        self, visit_model, medicine_model
+    ):
+        VisitNoteModel.objects.create(visit=visit_model, content="Patient is healthy")
+        VisitNoteModel.objects.create(visit=visit_model, content="Follow-up in 2 weeks")
+        PrescribedMedicineModel.objects.create(
+            visit=visit_model,
+            medicine=medicine_model,
+            quantity=Decimal("2.00"),
+            dosage="1 tablet twice a day",
+        )
+
+        visit = VisitRepository().get(visit_model.id)
+
+        assert len(visit.notes) == 2
+        assert {n.content for n in visit.notes} == {
+            "Patient is healthy",
+            "Follow-up in 2 weeks",
+        }
+        assert len(visit.prescribed_medicines) == 1
+        assert visit.prescribed_medicines[0].medicine.name == "Amoxicillin"
+        assert visit.prescribed_medicines[0].quantity == Decimal("2.00")
+
+    @pytest.mark.django_db
+    def test_list_returns_all(self, visit_model):
+        visits = VisitRepository().list()
+
+        assert len(visits) == 1
+        assert visits[0].patient.name == "Rex"
+
+    @pytest.mark.django_db
+    def test_update_persists_changes(self, visit_model):
+        visit = VisitRepository().get(visit_model.id)
+
+        updated = VisitRepository().update(
+            Visit(
+                id=visit.id,
+                patient=visit.patient,
+                veterinarian=visit.veterinarian,
+                visit_date=visit.visit_date,
+                diagnosis="Follow-up examination",
+            )
+        )
+
+        assert updated.diagnosis == "Follow-up examination"
+        visit_model.refresh_from_db()
+        assert visit_model.diagnosis == "Follow-up examination"
+
+    @pytest.mark.django_db
+    def test_delete_removes_visit(self, visit_model):
+        VisitRepository().delete(visit_model.id)
+
+        assert not VisitModel.objects.filter(id=visit_model.id).exists()
+
+
+class TestVisitNoteRepository:
+    @pytest.mark.django_db
+    def test_add_creates_note(self, visit_model):
+        visit = VisitRepository().get(visit_model.id)
+
+        note = VisitNoteRepository().add(
+            VisitNote(visit=visit, content="No abnormalities found")
+        )
+
+        assert note.id is not None
+        assert VisitNoteModel.objects.filter(
+            visit_id=visit_model.id, content="No abnormalities found"
+        ).exists()
+
+    @pytest.mark.django_db
+    def test_get_returns_none_for_missing(self):
+        assert VisitNoteRepository().get(999999) is None
+
+    @pytest.mark.django_db
+    def test_update_persists_changes(self, visit_model):
+        visit = VisitRepository().get(visit_model.id)
+        note = VisitNoteRepository().add(VisitNote(visit=visit, content="Initial"))
+
+        updated = VisitNoteRepository().update(
+            VisitNote(id=note.id, visit=visit, content="Updated content")
+        )
+
+        assert updated.content == "Updated content"
+
+    @pytest.mark.django_db
+    def test_delete_removes_note(self, visit_model):
+        visit = VisitRepository().get(visit_model.id)
+        note = VisitNoteRepository().add(VisitNote(visit=visit, content="Initial"))
+
+        VisitNoteRepository().delete(note.id)
+
+        assert not VisitNoteModel.objects.filter(id=note.id).exists()
+
+
+class TestPrescribedMedicineRepository:
+    @pytest.mark.django_db
+    def test_add_creates_prescribed_medicine(self, visit_model, medicine_model):
+        visit = VisitRepository().get(visit_model.id)
+        medicine = MedicineRepository().get(medicine_model.id)
+
+        prescription = PrescribedMedicineRepository().add(
+            PrescribedMedicine(
+                visit=visit,
+                medicine=medicine,
+                quantity=Decimal("1.00"),
+                dosage="Once daily",
+            )
+        )
+
+        assert prescription.id is not None
+        assert PrescribedMedicineModel.objects.filter(
+            visit_id=visit_model.id, medicine_id=medicine_model.id
+        ).exists()
+
+    @pytest.mark.django_db
+    def test_get_returns_none_for_missing(self):
+        assert PrescribedMedicineRepository().get(999999) is None
+
+    @pytest.mark.django_db
+    def test_list_returns_all(self, visit_model, medicine_model):
+        PrescribedMedicineModel.objects.create(
+            visit=visit_model,
+            medicine=medicine_model,
+            quantity=Decimal("3.00"),
+            dosage="Twice daily",
+        )
+
+        prescriptions = PrescribedMedicineRepository().list()
+
+        assert len(prescriptions) == 1
+        assert prescriptions[0].medicine.name == "Amoxicillin"
+
+    @pytest.mark.django_db
+    def test_update_persists_changes(self, visit_model, medicine_model):
+        obj = PrescribedMedicineModel.objects.create(
+            visit=visit_model,
+            medicine=medicine_model,
+            quantity=Decimal("1.00"),
+        )
+        prescription = PrescribedMedicineRepository().get(obj.id)
+
+        updated = PrescribedMedicineRepository().update(
+            PrescribedMedicine(
+                id=prescription.id,
+                visit=prescription.visit,
+                medicine=prescription.medicine,
+                quantity=Decimal("5.00"),
+                dosage="Three times daily",
+            )
+        )
+
+        assert updated.quantity == Decimal("5.00")
+        assert updated.dosage == "Three times daily"
+
+    @pytest.mark.django_db
+    def test_delete_removes_prescribed_medicine(self, visit_model, medicine_model):
+        obj = PrescribedMedicineModel.objects.create(
+            visit=visit_model,
+            medicine=medicine_model,
+            quantity=Decimal("1.00"),
+        )
+
+        PrescribedMedicineRepository().delete(obj.id)
+
+        assert not PrescribedMedicineModel.objects.filter(id=obj.id).exists()
