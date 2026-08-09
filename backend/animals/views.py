@@ -7,6 +7,7 @@ from animals.serializers import (
     AnimalTypeSerializer,
     PatientSerializer,
     PatientWeightSerializer,
+    PatientWithWeightsSerializer,
 )
 from src.models.animals import Animal, AnimalType, Patient, PatientWeight
 from src.repositories.animals import (
@@ -84,6 +85,20 @@ class PatientDetailView(RepositoryAPIViewMixin, generics.RetrieveUpdateDestroyAP
             data["breed"] = animal_to_dataclass(data["breed"])
         entity = replace(serializer.instance, **data)
         serializer.instance = self.repository.update(entity)
+
+
+class PatientDetailWithWeightsView(RepositoryAPIViewMixin, generics.RetrieveAPIView):
+    repository_class = PatientRepository
+    serializer_class = PatientWithWeightsSerializer
+
+    def get_object(self):
+        patient = super().get_object()
+        patient.weight_records = [
+            weight
+            for weight in PatientWeightRepository().list()
+            if weight.patient.id == patient.id
+        ]
+        return patient
 
 
 class PatientWeightListCreateView(RepositoryAPIViewMixin, generics.ListCreateAPIView):

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from animals.serializers import PatientSerializer
 from clients.models import Client
 
 
@@ -20,3 +21,10 @@ class ClientSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class ClientWithPatientsSerializer(ClientSerializer):
+    patients = PatientSerializer(many=True, read_only=True)
+
+    class Meta(ClientSerializer.Meta):
+        fields = ClientSerializer.Meta.fields + ["patients"]

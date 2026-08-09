@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type Paginated } from "@/lib/api";
 import { type Client, deleteClient, listClients } from "@/lib/clients";
-import { ChevronLeftIcon, ChevronRightIcon, EditIcon, PlusIcon, TrashIcon } from "@/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, EditIcon, EyeIcon, PlusIcon, TrashIcon } from "@/components/icons";
 
 function initials(client: Client) {
   return `${client.first_name.charAt(0)}${client.last_name.charAt(0)}`.toUpperCase();
@@ -112,6 +112,13 @@ export default function ClientsPage() {
                   <div className="flex justify-end gap-1">
                     <Link
                       href={`/clients/${c.id}`}
+                      title="View"
+                      className="flex size-7 items-center justify-center rounded-md text-ink-faint hover:bg-surface-3 hover:text-ink"
+                    >
+                      <EyeIcon />
+                    </Link>
+                    <Link
+                      href={`/clients/${c.id}/edit`}
                       title="Edit"
                       className="flex size-7 items-center justify-center rounded-md text-ink-faint hover:bg-surface-3 hover:text-ink"
                     >

@@ -62,3 +62,10 @@ class PatientWeightSerializer(serializers.ModelSerializer):
         model = PatientWeight
         fields = ["id", "patient", "weight_kg", "recorded_at", "created_at"]
         read_only_fields = ["id", "created_at"]
+
+
+class PatientWithWeightsSerializer(PatientSerializer):
+    weight_records = PatientWeightSerializer(many=True, read_only=True)
+
+    class Meta(PatientSerializer.Meta):
+        fields = PatientSerializer.Meta.fields + ["weight_records"]

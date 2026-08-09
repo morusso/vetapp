@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
 import { request, type Paginated } from "./api";
+import type { Patient } from "./patients";
 
 export type Client = {
   id: number;
@@ -45,6 +46,12 @@ export async function listAllClients(): Promise<Client[]> {
 
 export function getClient(id: number) {
   return request<Client>(`${CLIENTS_URL}${id}/`);
+}
+
+export type ClientWithPatients = Client & { patients: Patient[] };
+
+export function getClientFull(id: number) {
+  return request<ClientWithPatients>(`${CLIENTS_URL}${id}/full/`);
 }
 
 export function createClient(data: ClientInput) {
