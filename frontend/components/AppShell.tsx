@@ -15,12 +15,14 @@ import {
   PatientsIcon,
   StockBatchesIcon,
   UsersIcon,
+  VisitsIcon,
 } from "@/components/icons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: DashboardIcon },
   { href: "/clients", label: "Clients", icon: ClientsIcon },
   { href: "/patients", label: "Patients", icon: PatientsIcon },
+  { href: "/visits", label: "Visits", icon: VisitsIcon },
   { href: "/animals", label: "Animals", icon: AnimalsIcon },
   { href: "/animal-types", label: "Animal types", icon: AnimalTypesIcon },
   { href: "/medicines", label: "Medicines", icon: MedicinesIcon },

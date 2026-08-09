@@ -57,6 +57,17 @@ export function listPatients(url: string = PATIENTS_URL) {
   return request<Paginated<Patient>>(url);
 }
 
+export async function listAllPatients(): Promise<Patient[]> {
+  const all: Patient[] = [];
+  let url: string | undefined = PATIENTS_URL;
+  while (url) {
+    const page = await listPatients(url);
+    all.push(...page.results);
+    url = page.next ?? undefined;
+  }
+  return all;
+}
+
 export function getPatient(id: number) {
   return request<Patient>(`${PATIENTS_URL}${id}/`);
 }
