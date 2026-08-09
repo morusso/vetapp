@@ -6,6 +6,11 @@ urlpatterns = [
     path("", views.PatientListCreateView.as_view(), name="patient_list_create"),
     path("<int:pk>/", views.PatientDetailView.as_view(), name="patient_detail"),
     path(
+        "<int:pk>/full/",
+        views.PatientDetailWithWeightsView.as_view(),
+        name="patient_detail_full",
+    ),
+    path(
         "weights/",
         views.PatientWeightListCreateView.as_view(),
         name="patient_weight_list_create",

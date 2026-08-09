@@ -208,6 +208,17 @@ def test_patient_update(auth_client, patient):
 
 
 @pytest.mark.django_db
+def test_patient_retrieve_full(auth_client, patient, patient_weight):
+    response = auth_client.get(f"/api/v1/animals/patients/{patient.pk}/full/")
+    assert response.status_code == 200
+    assert response.data["name"] == "Burek"
+    assert response.data["owner_name"] == "Jan Kowalski"
+    assert response.data["breed_name"] == "Labrador"
+    assert len(response.data["weight_records"]) == 1
+    assert response.data["weight_records"][0]["weight_kg"] == "12.50"
+
+
+@pytest.mark.django_db
 def test_patient_delete(auth_client, patient):
     response = auth_client.delete(f"/api/v1/animals/patients/{patient.pk}/")
     assert response.status_code == 204
