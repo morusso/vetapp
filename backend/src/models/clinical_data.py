@@ -4,6 +4,11 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.models.animals import Patient
+    from src.models.user import User
 
 
 class MedicineForm(StrEnum):
@@ -63,3 +68,57 @@ class MedicineBatch:
 
     def __str__(self) -> str:
         return f"{self.medicine.name} - {self.batch_number}"
+
+
+@dataclass(kw_only=True)
+class Visit:
+    id: int | None = field(default=None)
+    patient: Patient
+    veterinarian: User
+    visit_date: datetime
+    diagnosis: str = field(default="")
+    created_at: datetime | None = field(default=None)
+    updated_at: datetime | None = field(default=None)
+    note: VisitNote | None = field(default=None)
+    prescribed_medicines: list[PrescribedMedicine] = field(default_factory=list)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return f"{self.patient.name} - {self.visit_date:%Y-%m-%d}"
+
+
+@dataclass(kw_only=True)
+class VisitNote:
+    id: int | None = field(default=None)
+    visit: Visit
+    content: str
+    created_at: datetime | None = field(default=None)
+    updated_at: datetime | None = field(default=None)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return f"Note for {self.visit}"
+
+
+@dataclass(kw_only=True)
+class PrescribedMedicine:
+    id: int | None = field(default=None)
+    visit: Visit
+    medicine: Medicine
+    quantity: Decimal
+    dosage: str = field(default="")
+    created_at: datetime | None = field(default=None)
+    updated_at: datetime | None = field(default=None)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return f"{self.medicine.name} x{self.quantity}"
