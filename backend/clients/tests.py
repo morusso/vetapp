@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from animals.models import Animal, AnimalType, Patient
 from clients.models import Client
 
 User = get_user_model()
@@ -87,3 +88,32 @@ def test_client_delete(auth_client, sample_client):
     response = auth_client.delete(f"/api/v1/clients/{sample_client.pk}/")
     assert response.status_code == 204
     assert not Client.objects.filter(pk=sample_client.pk).exists()
+
+
+@pytest.mark.django_db
+def test_client_retrieve_full_with_patients(auth_client, sample_client):
+    animal_type = AnimalType.objects.create(name="Dog")
+    breed = Animal.objects.create(name="Labrador", animal_type=animal_type)
+    Patient.objects.create(name="Burek", owner=sample_client, breed=breed)
+
+    response = auth_client.get(f"/api/v1/clients/{sample_client.pk}/full/")
+
+    assert response.status_code == 200
+    assert response.data["last_name"] == "Kowalski"
+    assert len(response.data["patients"]) == 1
+    assert response.data["patients"][0]["name"] == "Burek"
+    assert response.data["patients"][0]["breed_name"] == "Labrador"
+
+
+@pytest.mark.django_db
+def test_client_retrieve_full_without_patients(auth_client, sample_client):
+    response = auth_client.get(f"/api/v1/clients/{sample_client.pk}/full/")
+
+    assert response.status_code == 200
+    assert response.data["patients"] == []
+
+
+@pytest.mark.django_db
+def test_client_retrieve_full_not_found(auth_client):
+    response = auth_client.get("/api/v1/clients/999/full/")
+    assert response.status_code == 404
