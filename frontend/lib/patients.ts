@@ -61,6 +61,12 @@ export function getPatient(id: number) {
   return request<Patient>(`${PATIENTS_URL}${id}/`);
 }
 
+export type PatientWithWeights = Patient & { weight_records: PatientWeight[] };
+
+export function getPatientFull(id: number) {
+  return request<PatientWithWeights>(`${PATIENTS_URL}${id}/full/`);
+}
+
 export function createPatient(data: PatientInput) {
   return request<Patient>(PATIENTS_URL, {
     method: "POST",

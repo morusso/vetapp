@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { type ClientWithPatients, getClientFull } from "@/lib/clients";
-import { EditIcon } from "@/components/icons";
+import { EditIcon, EyeIcon } from "@/components/icons";
 
 const SEX_LABELS: Record<string, string> = {
   male: "Male",
@@ -143,7 +143,14 @@ export default function ClientDetailPage() {
                       {p.birth_date ?? "—"}
                     </td>
                     <td className="border-b border-line px-4 py-2.5 group-hover:bg-surface-2">
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-1">
+                        <Link
+                          href={`/patients/${p.id}/full`}
+                          title="View"
+                          className="flex size-7 items-center justify-center rounded-md text-ink-faint hover:bg-surface-3 hover:text-ink"
+                        >
+                          <EyeIcon />
+                        </Link>
                         <Link
                           href={`/patients/${p.id}`}
                           title="Edit"
