@@ -11,6 +11,9 @@ until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -q;
 done
 echo "Postgres is up - continuing"
 
-python manage.py migrate --noinput
-
-exec python manage.py runserver 0.0.0.0:8000
+if [ "$#" -eq 0 ]; then
+  python manage.py migrate --noinput
+  exec python manage.py runserver 0.0.0.0:8000
+else
+  exec "$@"
+fi
