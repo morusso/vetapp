@@ -3,11 +3,14 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from animals.models import Animal, AnimalType, Patient
 from clients.models import Client
 from clinical_data.models import Medicine, MedicineBatch, PrescribedMedicine, Visit, VisitNote
+from clinical_data.tasks import check_medicine_stock_levels
+from notifications.models import Notification
 
 User = get_user_model()
 
@@ -434,3 +437,107 @@ def test_prescribed_medicine_delete(auth_client, visit):
 
     assert response.status_code == 204
     assert not PrescribedMedicine.objects.filter(pk=prescription.pk).exists()
+
+
+@pytest.mark.django_db
+def test_check_medicine_stock_levels_notifies_admin_group_when_below_minimum(
+    in_memory_channel_layer,
+):
+    admin_group, _ = Group.objects.get_or_create(name="admin")
+    admin_user = User.objects.create_user(email="admin@example.com", password="s3cr3t-pass")
+    admin_user.groups.add(admin_group)
+
+    medicine = Medicine.objects.create(
+        name="Low Stock Med", unit="ml", minimum_stock_level=Decimal("100.00")
+    )
+    MedicineBatch.objects.create(
+        medicine=medicine,
+        batch_number="B1",
+        quantity=Decimal("5.00"),
+        expiry_date=date(2027, 1, 1),
+        received_at=date(2026, 1, 1),
+    )
+
+    check_medicine_stock_levels()
+
+    notification = Notification.objects.get(recipient=admin_user, event="low_medicine_stock")
+    assert notification.payload["medicine_name"] == "Low Stock Med"
+    assert notification.payload["current_stock"] == "5.00"
+    assert notification.payload["minimum_stock_level"] == "100.00"
+
+
+@pytest.mark.django_db
+def test_check_medicine_stock_levels_skips_medicine_above_minimum(in_memory_channel_layer):
+    Group.objects.get_or_create(name="admin")
+    medicine = Medicine.objects.create(
+        name="Well Stocked Med", unit="ml", minimum_stock_level=Decimal("10.00")
+    )
+    MedicineBatch.objects.create(
+        medicine=medicine,
+        batch_number="B1",
+        quantity=Decimal("50.00"),
+        expiry_date=date(2027, 1, 1),
+        received_at=date(2026, 1, 1),
+    )
+
+    check_medicine_stock_levels()
+
+    assert not Notification.objects.filter(event="low_medicine_stock").exists()
+
+
+@pytest.mark.django_db
+def test_check_medicine_stock_levels_ignores_medicine_without_minimum(in_memory_channel_layer):
+    Group.objects.get_or_create(name="admin")
+    Medicine.objects.create(name="No Minimum Set", unit="ml", minimum_stock_level=None)
+
+    check_medicine_stock_levels()
+
+    assert not Notification.objects.filter(event="low_medicine_stock").exists()
+
+
+@pytest.mark.django_db
+def test_check_medicine_stock_levels_excludes_expired_batches_from_stock(
+    in_memory_channel_layer,
+):
+    admin_group, _ = Group.objects.get_or_create(name="admin")
+    admin_user = User.objects.create_user(email="admin2@example.com", password="s3cr3t-pass")
+    admin_user.groups.add(admin_group)
+
+    medicine = Medicine.objects.create(
+        name="Expired Stock Med", unit="ml", minimum_stock_level=Decimal("1.00")
+    )
+    MedicineBatch.objects.create(
+        medicine=medicine,
+        batch_number="EXPIRED",
+        quantity=Decimal("999.00"),
+        expiry_date=date(2020, 1, 1),
+        received_at=date(2019, 1, 1),
+    )
+
+    check_medicine_stock_levels()
+
+    notification = Notification.objects.get(recipient=admin_user, event="low_medicine_stock")
+    assert notification.payload["current_stock"] == "0"
+
+
+@pytest.mark.django_db
+def test_check_medicine_stock_levels_only_notifies_admin_group_members(
+    in_memory_channel_layer,
+):
+    Group.objects.get_or_create(name="admin")
+    outsider = User.objects.create_user(email="outsider@example.com", password="s3cr3t-pass")
+
+    medicine = Medicine.objects.create(
+        name="Low Stock Med", unit="ml", minimum_stock_level=Decimal("100.00")
+    )
+    MedicineBatch.objects.create(
+        medicine=medicine,
+        batch_number="B1",
+        quantity=Decimal("5.00"),
+        expiry_date=date(2027, 1, 1),
+        received_at=date(2026, 1, 1),
+    )
+
+    check_medicine_stock_levels()
+
+    assert not Notification.objects.filter(recipient=outsider).exists()
