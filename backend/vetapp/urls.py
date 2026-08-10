@@ -42,4 +42,5 @@ urlpatterns = [
     path('api/v1/animals/patients/', include('animals.urls.patients_v1'), V1),
     path('api/v1/animals/', include('animals.urls.animals_v1'), V1),
     path('api/v1/clients/', include('clients.urls_v1'), V1),
+    path('api/v1/notifications/', include('notifications.urls_v1'), V1),
 ]
