@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
+import NotificationBell from "@/components/NotificationBell";
 import {
   AnimalsIcon,
   AnimalTypesIcon,
@@ -100,8 +101,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center border-b border-line px-6 py-3.5 text-xs text-ink-faint">
-          VetApp / <span className="ml-1 font-semibold text-ink-muted">{title}</span>
+        <header className="flex items-center justify-between border-b border-line px-6 py-3.5 text-xs text-ink-faint">
+          <span>
+            VetApp / <span className="ml-1 font-semibold text-ink-muted">{title}</span>
+          </span>
+          <NotificationBell />
         </header>
         <div className="flex flex-1 flex-col">{children}</div>
       </div>

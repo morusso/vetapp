@@ -3,7 +3,9 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { NotificationsProvider } from "@/lib/notifications";
 import AppShell from "@/components/AppShell";
+import NotificationToasts from "@/components/NotificationToasts";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -19,5 +21,10 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <NotificationsProvider>
+      <AppShell>{children}</AppShell>
+      <NotificationToasts />
+    </NotificationsProvider>
+  );
 }
