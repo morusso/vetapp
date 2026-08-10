@@ -9,6 +9,8 @@ import {
   type VisitNote,
 } from "@/lib/visits";
 import { TrashIcon } from "@/components/icons";
+import RichTextEditor from "@/components/RichTextEditor";
+import RichTextViewer from "@/components/RichTextViewer";
 
 export default function VisitNotes({ visitId }: { visitId: number }) {
   const [notes, setNotes] = useState<VisitNote[]>([]);
@@ -73,7 +75,7 @@ export default function VisitNotes({ visitId }: { visitId: number }) {
           {notes.map((n) => (
             <li key={n.id} className="rounded-md border border-line px-3 py-2 text-sm">
               <div className="flex items-start justify-between gap-2">
-                <p className="whitespace-pre-wrap">{n.content}</p>
+                <RichTextViewer html={n.content} className="text-ink" />
                 <button
                   type="button"
                   onClick={() => handleDelete(n.id)}
@@ -95,13 +97,7 @@ export default function VisitNotes({ visitId }: { visitId: number }) {
           <label htmlFor="content" className="text-xs font-semibold text-ink-muted">
             Add a note
           </label>
-          <textarea
-            id="content"
-            required
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="min-h-20 resize-y rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none"
-          />
+          <RichTextEditor id="content" value={content} onChange={setContent} required />
           <div className="flex justify-end">
             <button
               type="submit"

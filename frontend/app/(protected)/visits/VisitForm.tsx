@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api";
 import { listAllPatients, type Patient } from "@/lib/patients";
 import { listAllUsers, type User } from "@/lib/users";
 import type { VisitInput } from "@/lib/visits";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export type VisitFormValues = {
   patient: string;
@@ -171,11 +172,11 @@ export default function VisitForm({
           <label htmlFor="diagnosis" className="sr-only">
             Diagnosis
           </label>
-          <textarea
+          <RichTextEditor
             id="diagnosis"
             value={values.diagnosis}
-            onChange={(e) => setValues({ ...values, diagnosis: e.target.value })}
-            className={`${inputClass} min-h-24 resize-y`}
+            onChange={(html) => setValues({ ...values, diagnosis: html })}
+            editorClassName="min-h-24"
           />
           {errors("diagnosis")}
         </fieldset>

@@ -184,3 +184,54 @@ export function ChevronRightIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function BoldIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 4h6a3.5 3.5 0 0 1 0 7H7z" />
+      <path d="M7 11h7a3.5 3.5 0 0 1 0 7H7z" />
+    </Icon>
+  );
+}
+
+export function ItalicIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10 4h7" />
+      <path d="M7 20h7" />
+      <path d="M14 4 10 20" />
+    </Icon>
+  );
+}
+
+export function BulletListIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none" />
+      <path d="M9 6h11" />
+      <path d="M9 12h11" />
+      <path d="M9 18h11" />
+    </Icon>
+  );
+}
+
+export function OrderedListIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 6h11" />
+      <path d="M9 12h11" />
+      <path d="M9 18h11" />
+      <text x="1.5" y="8" fontSize="7" stroke="none" fill="currentColor">
+        1
+      </text>
+      <text x="1.5" y="14" fontSize="7" stroke="none" fill="currentColor">
+        2
+      </text>
+      <text x="1.5" y="20" fontSize="7" stroke="none" fill="currentColor">
+        3
+      </text>
+    </Icon>
+  );
+}

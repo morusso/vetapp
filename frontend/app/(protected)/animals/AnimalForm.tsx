@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, listAllAnimalTypes, type AnimalType } from "@/lib/animals";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export type AnimalFormValues = { name: string; animal_type: string; description: string };
 
@@ -106,11 +107,11 @@ export default function AnimalForm({
           <label htmlFor="description" className="text-xs font-semibold text-ink-muted">
             Description
           </label>
-          <textarea
+          <RichTextEditor
             id="description"
             value={values.description}
-            onChange={(e) => setValues({ ...values, description: e.target.value })}
-            className={`${inputClass} min-h-16 resize-y`}
+            onChange={(html) => setValues({ ...values, description: html })}
+            editorClassName="min-h-16"
           />
           {fieldErrors.description?.map((msg) => (
             <p key={msg} className="text-xs text-danger">

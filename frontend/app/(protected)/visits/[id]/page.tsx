@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { type Visit, getVisit } from "@/lib/visits";
 import { EditIcon } from "@/components/icons";
+import RichTextViewer from "@/components/RichTextViewer";
 import VisitNotes from "../VisitNotes";
 import PrescribedMedicines from "../PrescribedMedicines";
 
@@ -74,7 +75,7 @@ export default function VisitDetailPage() {
               <legend className="mb-0.5 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
                 Diagnosis
               </legend>
-              <p className="text-sm whitespace-pre-wrap text-ink-muted">{visit.diagnosis}</p>
+              <RichTextViewer html={visit.diagnosis} />
             </fieldset>
           )}
         </div>

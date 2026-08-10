@@ -12,12 +12,17 @@
     "e2e": "start-server-and-test dev http://localhost:3000 cypress:run"
   },
   "dependencies": {
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/react": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
+    "dompurify": "^3.4.13",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

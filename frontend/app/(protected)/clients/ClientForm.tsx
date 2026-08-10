@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export type ClientFormValues = {
   first_name: string;
@@ -141,11 +142,11 @@ export default function ClientForm({
           {required && " *"}
         </label>
         {multiline ? (
-          <textarea
+          <RichTextEditor
             id={id}
             value={values[id]}
-            onChange={(e) => handleChange(id, e.target.value)}
-            className={`${inputClass} min-h-16 resize-y`}
+            onChange={(html) => handleChange(id, html)}
+            editorClassName="min-h-16"
           />
         ) : (
           <input

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { type PatientWithWeights, getPatientFull } from "@/lib/patients";
 import { EditIcon } from "@/components/icons";
+import RichTextViewer from "@/components/RichTextViewer";
 
 const SEX_LABELS: Record<string, string> = {
   male: "Male",
@@ -122,7 +123,7 @@ export default function PatientFullPage() {
               <legend className="mb-0.5 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
                 Notes
               </legend>
-              <p className="text-sm whitespace-pre-wrap text-ink-muted">{patient.note}</p>
+              <RichTextViewer html={patient.note} />
             </fieldset>
           )}
         </div>
