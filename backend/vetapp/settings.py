@@ -21,12 +21,14 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -36,6 +38,7 @@ INSTALLED_APPS = [
     'clinical_data',
     'animals',
     'clients',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +70,21 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'vetapp.wsgi.application'
+ASGI_APPLICATION = 'vetapp.asgi.application'
+
+# Channels
+# https://channels.readthedocs.io/en/latest/topics/channel_layers.html
+
+CHANNELS_REDIS_URL = os.environ.get('CHANNELS_REDIS_URL', 'redis://localhost:6379/1')
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [CHANNELS_REDIS_URL],
+        },
+    },
+}
 
 DATABASES = {
     'default': {
