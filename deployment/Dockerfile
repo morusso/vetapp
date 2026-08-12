@@ -16,6 +16,8 @@ RUN pip install --no-cache-dir -r requirements/requirements-dev.txt
 COPY deployment/docker/dev_files/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+COPY deployment/docker/fixtures/ /files/fixtures/
+
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
