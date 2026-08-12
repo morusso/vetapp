@@ -124,6 +124,7 @@ class VisitNoteListCreateView(RepositoryAPIViewMixin, generics.ListCreateAPIView
     def perform_create(self, serializer):
         data = dict(serializer.validated_data)
         data["visit"] = visit_to_dataclass(data["visit"])
+        data["author"] = user_to_dataclass(self.request.user)
         serializer.instance = self.repository.add(VisitNote(**data))
 
 

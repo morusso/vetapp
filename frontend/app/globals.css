@@ -85,6 +85,8 @@ body {
 
 .prose-notes {
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .prose-notes p {
