@@ -49,7 +49,9 @@ export type MedicineBatch = {
   medicine_name: string;
   batch_number: string;
   quantity: string;
-  unit_price: string | null;
+  purchase_price: string | null;
+  sale_price: string | null;
+  tax_rate: string | null;
   supplier: string;
   expiry_date: string;
   received_at: string;
@@ -61,7 +63,9 @@ export type MedicineBatchInput = {
   medicine: number;
   batch_number: string;
   quantity: string;
-  unit_price?: string | null;
+  purchase_price?: string | null;
+  sale_price?: string | null;
+  tax_rate?: string | null;
   supplier?: string;
   expiry_date: string;
   received_at: string;

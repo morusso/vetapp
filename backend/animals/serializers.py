@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from animals.models import Animal, AnimalType, Patient, PatientWeight
+from clinical_data.serializers import VisitWithDetailsSerializer
 
 
 class AnimalTypeSerializer(serializers.ModelSerializer):
@@ -66,6 +67,7 @@ class PatientWeightSerializer(serializers.ModelSerializer):
 
 class PatientWithWeightsSerializer(PatientSerializer):
     weight_records = PatientWeightSerializer(many=True, read_only=True)
+    visits = VisitWithDetailsSerializer(many=True, read_only=True)
 
     class Meta(PatientSerializer.Meta):
-        fields = PatientSerializer.Meta.fields + ["weight_records"]
+        fields = PatientSerializer.Meta.fields + ["weight_records", "visits"]

@@ -48,7 +48,9 @@ def medicine_batch_to_dataclass(obj: MedicineBatchModel) -> MedicineBatch:
         medicine=medicine_to_dataclass(obj.medicine),
         batch_number=obj.batch_number,
         quantity=obj.quantity,
-        unit_price=obj.unit_price,
+        purchase_price=obj.purchase_price,
+        sale_price=obj.sale_price,
+        tax_rate=obj.tax_rate,
         supplier=obj.supplier,
         expiry_date=obj.expiry_date,
         received_at=obj.received_at,
@@ -122,7 +124,9 @@ class MedicineBatchRepository(Repository[MedicineBatch]):
             medicine_id=entity.medicine.id,
             batch_number=entity.batch_number,
             quantity=entity.quantity,
-            unit_price=entity.unit_price,
+            purchase_price=entity.purchase_price,
+            sale_price=entity.sale_price,
+            tax_rate=entity.tax_rate,
             supplier=entity.supplier,
             expiry_date=entity.expiry_date,
             received_at=entity.received_at,
@@ -132,7 +136,9 @@ class MedicineBatchRepository(Repository[MedicineBatch]):
             medicine=entity.medicine,
             batch_number=obj.batch_number,
             quantity=obj.quantity,
-            unit_price=obj.unit_price,
+            purchase_price=obj.purchase_price,
+            sale_price=obj.sale_price,
+            tax_rate=obj.tax_rate,
             supplier=obj.supplier,
             expiry_date=obj.expiry_date,
             received_at=obj.received_at,
@@ -145,7 +151,9 @@ class MedicineBatchRepository(Repository[MedicineBatch]):
         obj.medicine_id = entity.medicine.id
         obj.batch_number = entity.batch_number
         obj.quantity = entity.quantity
-        obj.unit_price = entity.unit_price
+        obj.purchase_price = entity.purchase_price
+        obj.sale_price = entity.sale_price
+        obj.tax_rate = entity.tax_rate
         obj.supplier = entity.supplier
         obj.expiry_date = entity.expiry_date
         obj.received_at = entity.received_at
@@ -155,7 +163,9 @@ class MedicineBatchRepository(Repository[MedicineBatch]):
             medicine=entity.medicine,
             batch_number=obj.batch_number,
             quantity=obj.quantity,
-            unit_price=obj.unit_price,
+            purchase_price=obj.purchase_price,
+            sale_price=obj.sale_price,
+            tax_rate=obj.tax_rate,
             supplier=obj.supplier,
             expiry_date=obj.expiry_date,
             received_at=obj.received_at,

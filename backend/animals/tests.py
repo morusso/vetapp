@@ -7,6 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from animals.models import Animal, AnimalType, Patient, PatientWeight
 from clients.models import Client
+from clinical_data.models import Medicine, PrescribedMedicine, Visit, VisitNote
 
 User = get_user_model()
 
@@ -216,6 +217,40 @@ def test_patient_retrieve_full(auth_client, patient, patient_weight):
     assert response.data["breed_name"] == "Labrador"
     assert len(response.data["weight_records"]) == 1
     assert response.data["weight_records"][0]["weight_kg"] == "12.50"
+    assert response.data["visits"] == []
+
+
+@pytest.mark.django_db
+def test_patient_retrieve_full_includes_visit_history(auth_client, user, patient, owner, breed):
+    other_patient = Patient.objects.create(name="Azor", owner=owner, breed=breed)
+    visit = Visit.objects.create(
+        patient=patient,
+        veterinarian=user,
+        visit_date="2026-02-01T09:30:00Z",
+        diagnosis="Routine checkup",
+    )
+    Visit.objects.create(
+        patient=other_patient,
+        veterinarian=user,
+        visit_date="2026-02-02T09:30:00Z",
+    )
+    VisitNote.objects.create(visit=visit, author=user, content="Looks healthy")
+    medicine = Medicine.objects.create(name="Amoxicillin", unit="mg")
+    PrescribedMedicine.objects.create(
+        visit=visit, medicine=medicine, quantity=Decimal("10.00"), dosage="1x daily"
+    )
+
+    response = auth_client.get(f"/api/v1/animals/patients/{patient.pk}/full/")
+
+    assert response.status_code == 200
+    assert len(response.data["visits"]) == 1
+    visit_data = response.data["visits"][0]
+    assert visit_data["id"] == visit.pk
+    assert visit_data["diagnosis"] == "Routine checkup"
+    assert len(visit_data["notes"]) == 1
+    assert visit_data["notes"][0]["content"] == "Looks healthy"
+    assert len(visit_data["prescribed_medicines"]) == 1
+    assert visit_data["prescribed_medicines"][0]["medicine_name"] == "Amoxicillin"
 
 
 @pytest.mark.django_db

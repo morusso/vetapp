@@ -12,7 +12,9 @@ export default function NewMedicineBatchPage() {
     medicine: "",
     batch_number: "",
     quantity: "",
-    unit_price: "",
+    purchase_price: "",
+    sale_price: "",
+    tax_rate: "",
     supplier: "",
     received_at: new Date().toISOString().slice(0, 10),
     expiry_date: "",
@@ -37,7 +39,9 @@ export default function NewMedicineBatchPage() {
         medicine: Number(values.medicine),
         batch_number: values.batch_number,
         quantity: values.quantity,
-        unit_price: values.unit_price || null,
+        purchase_price: values.purchase_price || null,
+        sale_price: values.sale_price || null,
+        tax_rate: values.tax_rate || null,
         supplier: values.supplier,
         received_at: values.received_at,
         expiry_date: values.expiry_date,
@@ -132,35 +136,67 @@ export default function NewMedicineBatchPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <label htmlFor="unit_price" className="text-xs font-semibold text-ink-muted">
-                Unit price
+              <label htmlFor="purchase_price" className="text-xs font-semibold text-ink-muted">
+                Purchase price
               </label>
               <input
-                id="unit_price"
+                id="purchase_price"
                 type="number"
                 step="0.01"
                 min="0"
-                value={values.unit_price}
-                onChange={(e) => setValues({ ...values, unit_price: e.target.value })}
+                value={values.purchase_price}
+                onChange={(e) => setValues({ ...values, purchase_price: e.target.value })}
                 className={inputClass}
               />
-              {errors("unit_price")}
+              {errors("purchase_price")}
             </div>
 
             <div className="flex flex-col gap-1">
-              <label htmlFor="supplier" className="text-xs font-semibold text-ink-muted">
-                Supplier
+              <label htmlFor="sale_price" className="text-xs font-semibold text-ink-muted">
+                Sale price
               </label>
               <input
-                id="supplier"
-                value={values.supplier}
-                onChange={(e) => setValues({ ...values, supplier: e.target.value })}
+                id="sale_price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={values.sale_price}
+                onChange={(e) => setValues({ ...values, sale_price: e.target.value })}
                 className={inputClass}
               />
-              {errors("supplier")}
+              {errors("sale_price")}
             </div>
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="tax_rate" className="text-xs font-semibold text-ink-muted">
+                Tax rate (%)
+              </label>
+              <input
+                id="tax_rate"
+                type="number"
+                step="0.01"
+                min="0"
+                value={values.tax_rate}
+                onChange={(e) => setValues({ ...values, tax_rate: e.target.value })}
+                className={inputClass}
+              />
+              {errors("tax_rate")}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="supplier" className="text-xs font-semibold text-ink-muted">
+              Supplier
+            </label>
+            <input
+              id="supplier"
+              value={values.supplier}
+              onChange={(e) => setValues({ ...values, supplier: e.target.value })}
+              className={inputClass}
+            />
+            {errors("supplier")}
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -85,6 +85,15 @@ export default function MedicineBatchesPage() {
                 Quantity
               </th>
               <th className="border-t border-b border-line bg-surface-2 px-3.5 py-2 text-left text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+                Purchase price
+              </th>
+              <th className="border-t border-b border-line bg-surface-2 px-3.5 py-2 text-left text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+                Sale price
+              </th>
+              <th className="border-t border-b border-line bg-surface-2 px-3.5 py-2 text-left text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+                Tax rate
+              </th>
+              <th className="border-t border-b border-line bg-surface-2 px-3.5 py-2 text-left text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
                 Expiry
               </th>
               <th className="border-t border-b border-line bg-surface-2 px-3.5 py-2 text-left text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
@@ -107,6 +116,15 @@ export default function MedicineBatchesPage() {
                 </td>
                 <td className="border-b border-line px-3.5 py-2.5 text-ink-muted group-hover:bg-surface-2">
                   {batch.quantity}
+                </td>
+                <td className="border-b border-line px-3.5 py-2.5 text-ink-muted group-hover:bg-surface-2">
+                  {batch.purchase_price ?? <span className="text-ink-faint">—</span>}
+                </td>
+                <td className="border-b border-line px-3.5 py-2.5 text-ink-muted group-hover:bg-surface-2">
+                  {batch.sale_price ?? <span className="text-ink-faint">—</span>}
+                </td>
+                <td className="border-b border-line px-3.5 py-2.5 text-ink-muted group-hover:bg-surface-2">
+                  {batch.tax_rate != null ? `${batch.tax_rate}%` : <span className="text-ink-faint">—</span>}
                 </td>
                 <td className="border-b border-line px-3.5 py-2.5 group-hover:bg-surface-2">
                   <div className="flex items-center gap-2">
