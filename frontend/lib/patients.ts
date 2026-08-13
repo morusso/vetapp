@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
 import { request, type Paginated } from "./api";
+import type { VisitWithDetails } from "./visits";
 
 export type Sex = "male" | "female" | "unknown";
 
@@ -72,7 +73,10 @@ export function getPatient(id: number) {
   return request<Patient>(`${PATIENTS_URL}${id}/`);
 }
 
-export type PatientWithWeights = Patient & { weight_records: PatientWeight[] };
+export type PatientWithWeights = Patient & {
+  weight_records: PatientWeight[];
+  visits: VisitWithDetails[];
+};
 
 export function getPatientFull(id: number) {
   return request<PatientWithWeights>(`${PATIENTS_URL}${id}/full/`);

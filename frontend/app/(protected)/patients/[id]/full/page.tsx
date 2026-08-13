@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { type PatientWithWeights, getPatientFull } from "@/lib/patients";
 import { EditIcon } from "@/components/icons";
-import RichTextViewer from "@/components/RichTextViewer";
+import RichTextViewer, { stripHtml } from "@/components/RichTextViewer";
 
 const SEX_LABELS: Record<string, string> = {
   male: "Male",
@@ -151,6 +151,66 @@ export default function PatientFullPage() {
                 <span className="font-mono">
                   {w.weight_kg} kg <span className="text-ink-faint">({w.recorded_at})</span>
                 </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="w-full max-w-xl rounded-lg border border-line bg-surface shadow-sm">
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <div>
+            <h2 className="text-base font-semibold">Visit history</h2>
+            <p className="text-xs text-ink-faint">{patient.visits.length} recorded</p>
+          </div>
+          <Link
+            href="/visits/new"
+            className="flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-xs font-semibold text-ink-muted hover:bg-surface-2"
+          >
+            New visit
+          </Link>
+        </div>
+
+        {patient.visits.length === 0 ? (
+          <p className="px-6 py-6 text-center text-sm text-ink-faint">No visits yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-3 px-6 py-5">
+            {patient.visits.map((v) => (
+              <li key={v.id} className="rounded-md border border-line px-3.5 py-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{new Date(v.visit_date).toLocaleString()}</span>
+                  <Link
+                    href={`/visits/${v.id}`}
+                    className="text-xs font-semibold text-accent hover:underline"
+                  >
+                    View
+                  </Link>
+                </div>
+                <div className="mt-0.5 text-xs text-ink-faint">{v.veterinarian_name}</div>
+
+                {v.diagnosis && stripHtml(v.diagnosis) && (
+                  <RichTextViewer html={v.diagnosis} className="mt-2" />
+                )}
+
+                {v.prescribed_medicines.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {v.prescribed_medicines.map((p) => (
+                      <span
+                        key={p.id}
+                        className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-muted"
+                      >
+                        {p.medicine_name} × {p.quantity}
+                        {p.dosage && ` — ${p.dosage}`}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {v.notes.length > 0 && (
+                  <p className="mt-2 text-xs text-ink-faint">
+                    {v.notes.length} note{v.notes.length === 1 ? "" : "s"}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
