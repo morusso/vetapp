@@ -5,6 +5,7 @@ import Link from "next/link";
 import { type Paginated } from "@/lib/api";
 import { type Visit, deleteVisit, listVisits } from "@/lib/visits";
 import { ChevronLeftIcon, ChevronRightIcon, EditIcon, EyeIcon, PlusIcon, TrashIcon } from "@/components/icons";
+import { stripHtml } from "@/components/RichTextViewer";
 
 export default function VisitsPage() {
   const [page, setPage] = useState<Paginated<Visit> | null>(null);
@@ -99,8 +100,8 @@ export default function VisitsPage() {
                   {new Date(visit.visit_date).toLocaleString()}
                 </td>
                 <td className="border-b border-line px-3.5 py-2.5 text-ink-muted group-hover:bg-surface-2">
-                  {visit.diagnosis ? (
-                    <span className="line-clamp-1">{visit.diagnosis}</span>
+                  {visit.diagnosis && stripHtml(visit.diagnosis) ? (
+                    <span className="line-clamp-1">{stripHtml(visit.diagnosis)}</span>
                   ) : (
                     <span className="text-ink-faint">—</span>
                   )}

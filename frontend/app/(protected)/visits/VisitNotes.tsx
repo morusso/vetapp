@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import {
   createVisitNote,
@@ -9,8 +9,52 @@ import {
   type VisitNote,
 } from "@/lib/visits";
 import { TrashIcon } from "@/components/icons";
+import RichTextEditor from "@/components/RichTextEditor";
+import RichTextViewer from "@/components/RichTextViewer";
+import { useAuth } from "@/lib/auth-context";
+
+function formatDateLabel(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+
+  if (date.toDateString() === now.toDateString()) return "Today";
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+
+  const diffDays = Math.round((now.getTime() - date.getTime()) / 86_400_000);
+  if (diffDays < 7) return date.toLocaleDateString(undefined, { weekday: "long" });
+
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "long",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+
+type NoteGroup = { label: string; notes: VisitNote[] };
+
+function groupNotesByDate(notes: VisitNote[]): NoteGroup[] {
+  const groups: NoteGroup[] = [];
+  for (const note of notes) {
+    const label = formatDateLabel(note.created_at);
+    const current = groups[groups.length - 1];
+    if (current && current.label === label) {
+      current.notes.push(note);
+    } else {
+      groups.push({ label, notes: [note] });
+    }
+  }
+  return groups;
+}
 
 export default function VisitNotes({ visitId }: { visitId: number }) {
+  const { currentUser } = useAuth();
   const [notes, setNotes] = useState<VisitNote[]>([]);
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +94,13 @@ export default function VisitNotes({ visitId }: { visitId: number }) {
     }
   }
 
+  const noteGroups = useMemo(() => groupNotesByDate(notes), [notes]);
+
+  function canDelete(note: VisitNote): boolean {
+    if (!currentUser) return false;
+    return currentUser.isAdmin || note.author === currentUser.id;
+  }
+
   async function handleDelete(id: number) {
     if (!confirm("Delete this note?")) return;
     try {
@@ -69,39 +120,51 @@ export default function VisitNotes({ visitId }: { visitId: number }) {
       <div className="flex flex-col gap-4 px-6 py-5">
         {error && <p className="text-sm text-danger">{error}</p>}
 
-        <ul className="flex max-h-72 flex-col gap-1.5 overflow-y-auto pr-1">
-          {notes.map((n) => (
-            <li key={n.id} className="rounded-md border border-line px-3 py-2 text-sm">
-              <div className="flex items-start justify-between gap-2">
-                <p className="whitespace-pre-wrap">{n.content}</p>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(n.id)}
-                  title="Delete"
-                  className="flex size-7 flex-none items-center justify-center rounded-md text-ink-faint hover:bg-danger-soft hover:text-danger"
-                >
-                  <TrashIcon />
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-ink-faint">
-                {new Date(n.created_at).toLocaleString()}
+        <div className="flex max-h-96 flex-col gap-4 overflow-y-auto pr-1">
+          {noteGroups.map((group) => (
+            <div key={group.label}>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                {group.label}
               </p>
-            </li>
+              <ul className="flex flex-col gap-2">
+                {group.notes.map((n) => (
+                  <li
+                    key={n.id}
+                    className="group/note rounded-lg border border-line px-3.5 py-2.5 text-sm transition-colors hover:border-ink-faint/40"
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span
+                        className="text-xs text-ink-faint"
+                        title={new Date(n.created_at).toLocaleString()}
+                      >
+                        {n.author_name ? `${n.author_name} · ` : ""}
+                        {formatTime(n.created_at)}
+                      </span>
+                      {canDelete(n) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(n.id)}
+                          title="Delete"
+                          className="flex size-6 flex-none items-center justify-center rounded-md text-ink-faint opacity-0 transition-opacity hover:bg-danger-soft hover:text-danger focus-visible:opacity-100 group-hover/note:opacity-100"
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
+                    </div>
+                    <RichTextViewer html={n.content} className="text-ink" />
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
           {notes.length === 0 && <p className="py-2 text-sm text-ink-faint">No notes yet.</p>}
-        </ul>
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 border-t border-line pt-4">
           <label htmlFor="content" className="text-xs font-semibold text-ink-muted">
             Add a note
           </label>
-          <textarea
-            id="content"
-            required
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="min-h-20 resize-y rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none"
-          />
+          <RichTextEditor id="content" value={content} onChange={setContent} required />
           <div className="flex justify-end">
             <button
               type="submit"

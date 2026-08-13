@@ -1,7 +1,9 @@
 from dataclasses import replace
 
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 
+from clinical_data.permissions import IsNoteAuthorOrAdmin
 from clinical_data.serializers import (
     MedicineBatchSerializer,
     MedicineSerializer,
@@ -124,12 +126,14 @@ class VisitNoteListCreateView(RepositoryAPIViewMixin, generics.ListCreateAPIView
     def perform_create(self, serializer):
         data = dict(serializer.validated_data)
         data["visit"] = visit_to_dataclass(data["visit"])
+        data["author"] = user_to_dataclass(self.request.user)
         serializer.instance = self.repository.add(VisitNote(**data))
 
 
 class VisitNoteDetailView(RepositoryAPIViewMixin, generics.RetrieveUpdateDestroyAPIView):
     repository_class = VisitNoteRepository
     serializer_class = VisitNoteSerializer
+    permission_classes = [IsAuthenticated, IsNoteAuthorOrAdmin]
 
     def perform_update(self, serializer):
         data = dict(serializer.validated_data)

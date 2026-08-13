@@ -95,6 +95,7 @@ class VisitNote:
     id: int | None = field(default=None)
     visit: Visit
     content: str
+    author: User | None = field(default=None)
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)
 

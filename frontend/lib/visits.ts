@@ -24,6 +24,8 @@ export type VisitNote = {
   id: number;
   visit: number;
   content: string;
+  author: number | null;
+  author_name: string | null;
   created_at: string;
   updated_at: string;
 };

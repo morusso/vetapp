@@ -70,10 +70,18 @@ class VisitSerializer(serializers.ModelSerializer):
 
 
 class VisitNoteSerializer(serializers.ModelSerializer):
+    author_name = serializers.SerializerMethodField()
+
     class Meta:
         model = VisitNote
-        fields = ["id", "visit", "content", "created_at", "updated_at"]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        fields = ["id", "visit", "content", "author", "author_name", "created_at", "updated_at"]
+        read_only_fields = ["id", "author", "created_at", "updated_at"]
+
+    def get_author_name(self, obj):
+        if not obj.author:
+            return None
+        full_name = f"{obj.author.first_name} {obj.author.last_name}".strip()
+        return full_name or obj.author.email
 
 
 class PrescribedMedicineSerializer(serializers.ModelSerializer):

@@ -172,6 +172,7 @@ def visit_note_to_dataclass(obj: VisitNoteModel) -> VisitNote:
         id=obj.id,
         visit=visit_to_dataclass(obj.visit),
         content=obj.content,
+        author=user_to_dataclass(obj.author) if obj.author else None,
         created_at=obj.created_at,
         updated_at=obj.updated_at,
     )
@@ -204,10 +205,11 @@ def visit_to_dataclass(obj: VisitModel) -> Visit:
             id=note.id,
             visit=visit,
             content=note.content,
+            author=user_to_dataclass(note.author) if note.author else None,
             created_at=note.created_at,
             updated_at=note.updated_at,
         )
-        for note in obj.notes.all()
+        for note in obj.notes.select_related("author").all()
     ]
     visit.prescribed_medicines = [
         PrescribedMedicine(
@@ -280,7 +282,7 @@ class VisitNoteRepository(Repository[VisitNote]):
     def get(self, id: int) -> VisitNote | None:
         try:
             obj = VisitNoteModel.objects.select_related(
-                *VISIT_FK_RELATIONS
+                "author", *VISIT_FK_RELATIONS
             ).get(id=id)
         except VisitNoteModel.DoesNotExist:
             return None
@@ -289,17 +291,22 @@ class VisitNoteRepository(Repository[VisitNote]):
     def list(self) -> list[VisitNote]:
         return [
             visit_note_to_dataclass(obj)
-            for obj in VisitNoteModel.objects.select_related(*VISIT_FK_RELATIONS).all()
+            for obj in VisitNoteModel.objects.select_related(
+                "author", *VISIT_FK_RELATIONS
+            ).all()
         ]
 
     def add(self, entity: VisitNote) -> VisitNote:
         obj = VisitNoteModel.objects.create(
-            visit_id=entity.visit.id, content=entity.content
+            visit_id=entity.visit.id,
+            content=entity.content,
+            author_id=entity.author.id if entity.author else None,
         )
         return VisitNote(
             id=obj.id,
             visit=entity.visit,
             content=obj.content,
+            author=entity.author,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )
@@ -312,6 +319,7 @@ class VisitNoteRepository(Repository[VisitNote]):
             id=obj.id,
             visit=entity.visit,
             content=obj.content,
+            author=entity.author,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )

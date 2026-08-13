@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from src.models.user import Specialization, User
 from src.repositories.user import (
@@ -18,9 +19,14 @@ from user.serializers import (
     ChangePasswordSerializer,
     SpecializationSerializer,
     UserSerializer,
+    UserTokenObtainPairSerializer,
 )
 from user.tokens import blacklist_tokens
 from vetapp.mixins import GenericErrorHandlingMixin, RepositoryAPIViewMixin
+
+
+class UserTokenObtainPairView(TokenObtainPairView):
+    serializer_class = UserTokenObtainPairSerializer
 
 
 class UserListCreateView(RepositoryAPIViewMixin, generics.ListCreateAPIView):

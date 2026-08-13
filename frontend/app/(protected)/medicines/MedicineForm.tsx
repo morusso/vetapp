@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import type { DosageForm, MedicineInput } from "@/lib/medicines";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export type MedicineFormValues = {
   name: string;
@@ -205,11 +206,11 @@ export default function MedicineForm({
             <label htmlFor="description" className="text-xs font-semibold text-ink-muted">
               Description
             </label>
-            <textarea
+            <RichTextEditor
               id="description"
               value={values.description}
-              onChange={(e) => setValues({ ...values, description: e.target.value })}
-              className={`${inputClass} min-h-16 resize-y`}
+              onChange={(html) => setValues({ ...values, description: html })}
+              editorClassName="min-h-16"
             />
             {errors("description")}
           </div>

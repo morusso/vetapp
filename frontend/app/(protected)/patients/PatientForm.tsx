@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api";
 import { listAllAnimals, type Animal } from "@/lib/animals";
 import { listAllClients, type Client } from "@/lib/clients";
 import type { PatientInput, Sex } from "@/lib/patients";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export type PatientFormValues = {
   name: string;
@@ -235,11 +236,11 @@ export default function PatientForm({
           <label htmlFor="note" className="sr-only">
             Internal notes
           </label>
-          <textarea
+          <RichTextEditor
             id="note"
             value={values.note}
-            onChange={(e) => setValues({ ...values, note: e.target.value })}
-            className={`${inputClass} min-h-16 resize-y`}
+            onChange={(html) => setValues({ ...values, note: html })}
+            editorClassName="min-h-16"
           />
         </fieldset>
 

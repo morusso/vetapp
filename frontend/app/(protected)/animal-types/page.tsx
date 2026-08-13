@@ -10,6 +10,7 @@ import {
 } from "@/lib/animals";
 import { ChevronLeftIcon, ChevronRightIcon, EditIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import { dotColor } from "@/lib/colors";
+import { stripHtml } from "@/components/RichTextViewer";
 
 export default function AnimalTypesPage() {
   const [page, setPage] = useState<Paginated<AnimalType> | null>(null);
@@ -98,7 +99,9 @@ export default function AnimalTypesPage() {
                   </div>
                 </td>
                 <td className="border-b border-line px-3.5 py-2.5 text-ink-muted group-hover:bg-surface-2">
-                  {animalType.description || <span className="text-ink-faint">—</span>}
+                  {(animalType.description && stripHtml(animalType.description)) || (
+                    <span className="text-ink-faint">—</span>
+                  )}
                 </td>
                 <td className="border-b border-line px-3.5 py-2.5 group-hover:bg-surface-2">
                   <div className="flex justify-end gap-1">

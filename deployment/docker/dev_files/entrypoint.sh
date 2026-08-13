@@ -13,6 +13,7 @@ echo "Postgres is up - continuing"
 
 if [ "$#" -eq 0 ]; then
   python manage.py migrate --noinput
+  python manage.py loaddata /files/fixtures/data_db_fixture.json
   exec python manage.py runserver 0.0.0.0:8000
 else
   exec "$@"
