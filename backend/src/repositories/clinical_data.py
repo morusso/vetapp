@@ -1,16 +1,20 @@
 from clinical_data.models import Medicine as MedicineModel
 from clinical_data.models import MedicineBatch as MedicineBatchModel
 from clinical_data.models import PrescribedMedicine as PrescribedMedicineModel
+from clinical_data.models import Service as ServiceModel
 from clinical_data.models import Visit as VisitModel
 from clinical_data.models import VisitNote as VisitNoteModel
+from clinical_data.models import VisitService as VisitServiceModel
 
 from src.models.clinical_data import (
     Medicine,
     MedicineBatch,
     MedicineForm,
     PrescribedMedicine,
+    Service,
     Visit,
     VisitNote,
+    VisitService,
 )
 from src.repositories.animals import PATIENT_RELATIONS, patient_to_dataclass
 from src.repositories.base import Repository
@@ -177,6 +181,53 @@ class MedicineBatchRepository(Repository[MedicineBatch]):
         MedicineBatchModel.objects.filter(id=id).delete()
 
 
+def service_to_dataclass(obj: ServiceModel) -> Service:
+    return Service(
+        id=obj.id,
+        name=obj.name,
+        description=obj.description,
+        price=obj.price,
+        duration_minutes=obj.duration_minutes,
+        is_active=obj.is_active,
+        created_at=obj.created_at,
+        updated_at=obj.updated_at,
+    )
+
+
+class ServiceRepository(Repository[Service]):
+    def get(self, id: int) -> Service | None:
+        try:
+            return service_to_dataclass(ServiceModel.objects.get(id=id))
+        except ServiceModel.DoesNotExist:
+            return None
+
+    def list(self) -> list[Service]:
+        return [service_to_dataclass(obj) for obj in ServiceModel.objects.all()]
+
+    def add(self, entity: Service) -> Service:
+        obj = ServiceModel.objects.create(
+            name=entity.name,
+            description=entity.description,
+            price=entity.price,
+            duration_minutes=entity.duration_minutes,
+            is_active=entity.is_active,
+        )
+        return service_to_dataclass(obj)
+
+    def update(self, entity: Service) -> Service:
+        obj = ServiceModel.objects.get(id=entity.id)
+        obj.name = entity.name
+        obj.description = entity.description
+        obj.price = entity.price
+        obj.duration_minutes = entity.duration_minutes
+        obj.is_active = entity.is_active
+        obj.save()
+        return service_to_dataclass(obj)
+
+    def delete(self, id: int) -> None:
+        ServiceModel.objects.filter(id=id).delete()
+
+
 def visit_note_to_dataclass(obj: VisitNoteModel) -> VisitNote:
     return VisitNote(
         id=obj.id,
@@ -195,6 +246,19 @@ def prescribed_medicine_to_dataclass(obj: PrescribedMedicineModel) -> Prescribed
         medicine=medicine_to_dataclass(obj.medicine),
         quantity=obj.quantity,
         dosage=obj.dosage,
+        created_at=obj.created_at,
+        updated_at=obj.updated_at,
+    )
+
+
+def visit_service_to_dataclass(obj: VisitServiceModel) -> VisitService:
+    return VisitService(
+        id=obj.id,
+        visit=visit_to_dataclass(obj.visit),
+        service=service_to_dataclass(obj.service),
+        quantity=obj.quantity,
+        price=obj.price,
+        notes=obj.notes,
         created_at=obj.created_at,
         updated_at=obj.updated_at,
     )
@@ -232,6 +296,19 @@ def visit_to_dataclass(obj: VisitModel) -> Visit:
             updated_at=pm.updated_at,
         )
         for pm in obj.prescribed_medicines.select_related("medicine").all()
+    ]
+    visit.visit_services = [
+        VisitService(
+            id=vs.id,
+            visit=visit,
+            service=service_to_dataclass(vs.service),
+            quantity=vs.quantity,
+            price=vs.price,
+            notes=vs.notes,
+            created_at=vs.created_at,
+            updated_at=vs.updated_at,
+        )
+        for vs in obj.visit_services.select_related("service").all()
     ]
     return visit
 
@@ -392,3 +469,63 @@ class PrescribedMedicineRepository(Repository[PrescribedMedicine]):
 
     def delete(self, id: int) -> None:
         PrescribedMedicineModel.objects.filter(id=id).delete()
+
+
+class VisitServiceRepository(Repository[VisitService]):
+    def get(self, id: int) -> VisitService | None:
+        try:
+            obj = VisitServiceModel.objects.select_related(
+                "service", *VISIT_FK_RELATIONS
+            ).get(id=id)
+        except VisitServiceModel.DoesNotExist:
+            return None
+        return visit_service_to_dataclass(obj)
+
+    def list(self) -> list[VisitService]:
+        return [
+            visit_service_to_dataclass(obj)
+            for obj in VisitServiceModel.objects.select_related(
+                "service", *VISIT_FK_RELATIONS
+            ).all()
+        ]
+
+    def add(self, entity: VisitService) -> VisitService:
+        obj = VisitServiceModel.objects.create(
+            visit_id=entity.visit.id,
+            service_id=entity.service.id,
+            quantity=entity.quantity,
+            price=entity.price,
+            notes=entity.notes,
+        )
+        return VisitService(
+            id=obj.id,
+            visit=entity.visit,
+            service=entity.service,
+            quantity=obj.quantity,
+            price=obj.price,
+            notes=obj.notes,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+        )
+
+    def update(self, entity: VisitService) -> VisitService:
+        obj = VisitServiceModel.objects.get(id=entity.id)
+        obj.visit_id = entity.visit.id
+        obj.service_id = entity.service.id
+        obj.quantity = entity.quantity
+        obj.price = entity.price
+        obj.notes = entity.notes
+        obj.save()
+        return VisitService(
+            id=obj.id,
+            visit=entity.visit,
+            service=entity.service,
+            quantity=obj.quantity,
+            price=obj.price,
+            notes=obj.notes,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+        )
+
+    def delete(self, id: int) -> None:
+        VisitServiceModel.objects.filter(id=id).delete()

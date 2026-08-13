@@ -1,6 +1,14 @@
 from rest_framework import serializers
 
-from clinical_data.models import Medicine, MedicineBatch, PrescribedMedicine, Visit, VisitNote
+from clinical_data.models import (
+    Medicine,
+    MedicineBatch,
+    PrescribedMedicine,
+    Service,
+    Visit,
+    VisitNote,
+    VisitService,
+)
 
 
 class MedicineSerializer(serializers.ModelSerializer):
@@ -104,9 +112,49 @@ class PrescribedMedicineSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = [
+            "id",
+            "name",
+            "description",
+            "price",
+            "duration_minutes",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class VisitServiceSerializer(serializers.ModelSerializer):
+    service_name = serializers.CharField(source="service.name", read_only=True)
+
+    class Meta:
+        model = VisitService
+        fields = [
+            "id",
+            "visit",
+            "service",
+            "service_name",
+            "quantity",
+            "price",
+            "notes",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
 class VisitWithDetailsSerializer(VisitSerializer):
     notes = VisitNoteSerializer(many=True, read_only=True)
     prescribed_medicines = PrescribedMedicineSerializer(many=True, read_only=True)
+    visit_services = VisitServiceSerializer(many=True, read_only=True)
 
     class Meta(VisitSerializer.Meta):
-        fields = VisitSerializer.Meta.fields + ["notes", "prescribed_medicines"]
+        fields = VisitSerializer.Meta.fields + [
+            "notes",
+            "prescribed_medicines",
+            "visit_services",
+        ]

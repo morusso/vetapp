@@ -8,7 +8,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from animals.models import Animal, AnimalType, Patient
 from clients.models import Client
-from clinical_data.models import Medicine, MedicineBatch, PrescribedMedicine, Visit, VisitNote
+from clinical_data.models import (
+    Medicine,
+    MedicineBatch,
+    PrescribedMedicine,
+    Service,
+    Visit,
+    VisitNote,
+    VisitService,
+)
 from clinical_data.tasks import check_medicine_stock_levels
 from notifications.models import Notification
 
@@ -64,6 +72,16 @@ def visit(patient, user):
         veterinarian=user,
         visit_date="2026-01-15T10:00:00Z",
         diagnosis="Routine checkup",
+    )
+
+
+@pytest.fixture
+def service(db):
+    return Service.objects.create(
+        name="Consultation",
+        description="General checkup",
+        price=Decimal("100.00"),
+        duration_minutes=30,
     )
 
 
@@ -482,6 +500,115 @@ def test_prescribed_medicine_delete(auth_client, visit):
 
     assert response.status_code == 204
     assert not PrescribedMedicine.objects.filter(pk=prescription.pk).exists()
+
+
+@pytest.mark.django_db
+def test_service_create(auth_client):
+    response = auth_client.post(
+        "/api/v1/clinical-data/services/",
+        {"name": "Vaccination", "price": "50.00", "duration_minutes": 15},
+    )
+
+    assert response.status_code == 201
+    assert Service.objects.filter(name="Vaccination").exists()
+
+
+@pytest.mark.django_db
+def test_service_list(auth_client, service):
+    response = auth_client.get("/api/v1/clinical-data/services/")
+
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["id"] == service.pk
+
+
+@pytest.mark.django_db
+def test_service_update(auth_client, service):
+    response = auth_client.patch(
+        f"/api/v1/clinical-data/services/{service.pk}/",
+        {"price": "150.00"},
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    service.refresh_from_db()
+    assert service.price == Decimal("150.00")
+
+
+@pytest.mark.django_db
+def test_service_delete(auth_client, service):
+    response = auth_client.delete(f"/api/v1/clinical-data/services/{service.pk}/")
+
+    assert response.status_code == 204
+    assert not Service.objects.filter(pk=service.pk).exists()
+
+
+@pytest.mark.django_db
+def test_visit_service_create(auth_client, visit, service):
+    response = auth_client.post(
+        "/api/v1/clinical-data/visits/services/",
+        {
+            "visit": visit.pk,
+            "service": service.pk,
+            "quantity": "1.00",
+            "price": "100.00",
+        },
+    )
+
+    assert response.status_code == 201
+    assert VisitService.objects.filter(visit=visit, service=service).exists()
+
+
+@pytest.mark.django_db
+def test_visit_service_filter_by_visit(auth_client, visit, service, patient, user):
+    other_visit = Visit.objects.create(
+        patient=patient, veterinarian=user, visit_date="2026-03-01T08:00:00Z"
+    )
+    visit_service = VisitService.objects.create(
+        visit=visit, service=service, quantity=Decimal("1.00")
+    )
+    VisitService.objects.create(
+        visit=other_visit, service=service, quantity=Decimal("1.00")
+    )
+
+    response = auth_client.get(
+        f"/api/v1/clinical-data/visits/services/?visit={visit.pk}"
+    )
+
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+    assert response.data["results"][0]["id"] == visit_service.pk
+
+
+@pytest.mark.django_db
+def test_visit_service_update(auth_client, visit, service):
+    visit_service = VisitService.objects.create(
+        visit=visit, service=service, quantity=Decimal("1.00")
+    )
+
+    response = auth_client.patch(
+        f"/api/v1/clinical-data/visits/services/{visit_service.pk}/",
+        {"quantity": "4.00"},
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    visit_service.refresh_from_db()
+    assert visit_service.quantity == Decimal("4.00")
+
+
+@pytest.mark.django_db
+def test_visit_service_delete(auth_client, visit, service):
+    visit_service = VisitService.objects.create(
+        visit=visit, service=service, quantity=Decimal("1.00")
+    )
+
+    response = auth_client.delete(
+        f"/api/v1/clinical-data/visits/services/{visit_service.pk}/"
+    )
+
+    assert response.status_code == 204
+    assert not VisitService.objects.filter(pk=visit_service.pk).exists()
 
 
 @pytest.mark.django_db

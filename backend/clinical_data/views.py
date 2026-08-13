@@ -8,19 +8,32 @@ from clinical_data.serializers import (
     MedicineBatchSerializer,
     MedicineSerializer,
     PrescribedMedicineSerializer,
+    ServiceSerializer,
     VisitNoteSerializer,
     VisitSerializer,
+    VisitServiceSerializer,
     VisitWithDetailsSerializer,
 )
-from src.models.clinical_data import Medicine, MedicineBatch, PrescribedMedicine, Visit, VisitNote
+from src.models.clinical_data import (
+    Medicine,
+    MedicineBatch,
+    PrescribedMedicine,
+    Service,
+    Visit,
+    VisitNote,
+    VisitService,
+)
 from src.repositories.animals import patient_to_dataclass
 from src.repositories.clinical_data import (
     MedicineBatchRepository,
     MedicineRepository,
     PrescribedMedicineRepository,
+    ServiceRepository,
     VisitNoteRepository,
     VisitRepository,
+    VisitServiceRepository,
     medicine_to_dataclass,
+    service_to_dataclass,
     visit_to_dataclass,
 )
 from src.repositories.user import user_to_dataclass
@@ -175,5 +188,56 @@ class PrescribedMedicineDetailView(
             data["visit"] = visit_to_dataclass(data["visit"])
         if "medicine" in data:
             data["medicine"] = medicine_to_dataclass(data["medicine"])
+        entity = replace(serializer.instance, **data)
+        serializer.instance = self.repository.update(entity)
+
+
+class ServiceListCreateView(RepositoryAPIViewMixin, generics.ListCreateAPIView):
+    repository_class = ServiceRepository
+    serializer_class = ServiceSerializer
+
+    def perform_create(self, serializer):
+        serializer.instance = self.repository.add(Service(**serializer.validated_data))
+
+
+class ServiceDetailView(RepositoryAPIViewMixin, generics.RetrieveUpdateDestroyAPIView):
+    repository_class = ServiceRepository
+    serializer_class = ServiceSerializer
+
+    def perform_update(self, serializer):
+        entity = replace(serializer.instance, **serializer.validated_data)
+        serializer.instance = self.repository.update(entity)
+
+
+class VisitServiceListCreateView(RepositoryAPIViewMixin, generics.ListCreateAPIView):
+    repository_class = VisitServiceRepository
+    serializer_class = VisitServiceSerializer
+
+    def get_queryset(self):
+        visit_services = self.repository.list()
+        visit_id = self.request.query_params.get("visit")
+        if visit_id:
+            visit_services = [vs for vs in visit_services if str(vs.visit.id) == visit_id]
+        return visit_services
+
+    def perform_create(self, serializer):
+        data = dict(serializer.validated_data)
+        data["visit"] = visit_to_dataclass(data["visit"])
+        data["service"] = service_to_dataclass(data["service"])
+        serializer.instance = self.repository.add(VisitService(**data))
+
+
+class VisitServiceDetailView(
+    RepositoryAPIViewMixin, generics.RetrieveUpdateDestroyAPIView
+):
+    repository_class = VisitServiceRepository
+    serializer_class = VisitServiceSerializer
+
+    def perform_update(self, serializer):
+        data = dict(serializer.validated_data)
+        if "visit" in data:
+            data["visit"] = visit_to_dataclass(data["visit"])
+        if "service" in data:
+            data["service"] = service_to_dataclass(data["service"])
         entity = replace(serializer.instance, **data)
         serializer.instance = self.repository.update(entity)
