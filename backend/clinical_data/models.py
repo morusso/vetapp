@@ -57,8 +57,14 @@ class MedicineBatch(models.Model):
         max_length=255, validators=[MaxLengthValidator(100)]
     )
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    unit_price = models.DecimalField(
+    purchase_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    sale_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
     )
     supplier = models.CharField(
         max_length=255, blank=True, validators=[MaxLengthValidator(200)]

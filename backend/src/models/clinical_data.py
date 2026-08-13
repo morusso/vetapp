@@ -55,7 +55,9 @@ class MedicineBatch:
     medicine: Medicine
     batch_number: str
     quantity: Decimal
-    unit_price: Decimal | None = field(default=None)
+    purchase_price: Decimal | None = field(default=None)
+    sale_price: Decimal | None = field(default=None)
+    tax_rate: Decimal | None = field(default=None)
     supplier: str = field(default="")
     expiry_date: date
     received_at: date
