@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.models.clients import Client
+    from src.models.clinical_data import Visit
 
 
 class Sex(StrEnum):
@@ -68,6 +69,7 @@ class Patient:
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)
     weight_records: list[PatientWeight] = field(default_factory=list)
+    visits: list[Visit] = field(default_factory=list)
 
     @property
     def pk(self) -> int | None:

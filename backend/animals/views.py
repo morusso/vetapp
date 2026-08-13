@@ -20,6 +20,7 @@ from src.repositories.animals import (
     patient_to_dataclass,
 )
 from src.repositories.clients import client_to_dataclass
+from src.repositories.clinical_data import VisitRepository
 from vetapp.mixins import RepositoryAPIViewMixin
 
 
@@ -97,6 +98,11 @@ class PatientDetailWithWeightsView(RepositoryAPIViewMixin, generics.RetrieveAPIV
             weight
             for weight in PatientWeightRepository().list()
             if weight.patient.id == patient.id
+        ]
+        patient.visits = [
+            visit
+            for visit in VisitRepository().list()
+            if visit.patient.id == patient.id
         ]
         return patient
 
