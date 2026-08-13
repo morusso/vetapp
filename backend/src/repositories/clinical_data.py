@@ -187,6 +187,7 @@ def service_to_dataclass(obj: ServiceModel) -> Service:
         name=obj.name,
         description=obj.description,
         price=obj.price,
+        tax_rate=obj.tax_rate,
         duration_minutes=obj.duration_minutes,
         is_active=obj.is_active,
         created_at=obj.created_at,
@@ -209,6 +210,7 @@ class ServiceRepository(Repository[Service]):
             name=entity.name,
             description=entity.description,
             price=entity.price,
+            tax_rate=entity.tax_rate,
             duration_minutes=entity.duration_minutes,
             is_active=entity.is_active,
         )
@@ -219,6 +221,7 @@ class ServiceRepository(Repository[Service]):
         obj.name = entity.name
         obj.description = entity.description
         obj.price = entity.price
+        obj.tax_rate = entity.tax_rate
         obj.duration_minutes = entity.duration_minutes
         obj.is_active = entity.is_active
         obj.save()
@@ -258,6 +261,7 @@ def visit_service_to_dataclass(obj: VisitServiceModel) -> VisitService:
         service=service_to_dataclass(obj.service),
         quantity=obj.quantity,
         price=obj.price,
+        tax_rate=obj.tax_rate,
         notes=obj.notes,
         created_at=obj.created_at,
         updated_at=obj.updated_at,
@@ -304,6 +308,7 @@ def visit_to_dataclass(obj: VisitModel) -> Visit:
             service=service_to_dataclass(vs.service),
             quantity=vs.quantity,
             price=vs.price,
+            tax_rate=vs.tax_rate,
             notes=vs.notes,
             created_at=vs.created_at,
             updated_at=vs.updated_at,
@@ -495,6 +500,7 @@ class VisitServiceRepository(Repository[VisitService]):
             service_id=entity.service.id,
             quantity=entity.quantity,
             price=entity.price,
+            tax_rate=entity.tax_rate,
             notes=entity.notes,
         )
         return VisitService(
@@ -503,6 +509,7 @@ class VisitServiceRepository(Repository[VisitService]):
             service=entity.service,
             quantity=obj.quantity,
             price=obj.price,
+            tax_rate=obj.tax_rate,
             notes=obj.notes,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
@@ -514,6 +521,7 @@ class VisitServiceRepository(Repository[VisitService]):
         obj.service_id = entity.service.id
         obj.quantity = entity.quantity
         obj.price = entity.price
+        obj.tax_rate = entity.tax_rate
         obj.notes = entity.notes
         obj.save()
         return VisitService(
@@ -522,6 +530,7 @@ class VisitServiceRepository(Repository[VisitService]):
             service=entity.service,
             quantity=obj.quantity,
             price=obj.price,
+            tax_rate=obj.tax_rate,
             notes=obj.notes,
             created_at=obj.created_at,
             updated_at=obj.updated_at,

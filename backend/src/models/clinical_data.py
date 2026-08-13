@@ -134,6 +134,7 @@ class Service:
     name: str
     description: str = field(default="")
     price: Decimal
+    tax_rate: Decimal | None = field(default=None)
     duration_minutes: int | None = field(default=None)
     is_active: bool = field(default=True)
     created_at: datetime | None = field(default=None)
@@ -154,6 +155,7 @@ class VisitService:
     service: Service
     quantity: Decimal = field(default=Decimal("1"))
     price: Decimal | None = field(default=None)
+    tax_rate: Decimal | None = field(default=None)
     notes: str = field(default="")
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)

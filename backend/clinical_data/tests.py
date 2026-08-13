@@ -81,6 +81,7 @@ def service(db):
         name="Consultation",
         description="General checkup",
         price=Decimal("100.00"),
+        tax_rate=Decimal("23.00"),
         duration_minutes=30,
     )
 
@@ -506,11 +507,16 @@ def test_prescribed_medicine_delete(auth_client, visit):
 def test_service_create(auth_client):
     response = auth_client.post(
         "/api/v1/clinical-data/services/",
-        {"name": "Vaccination", "price": "50.00", "duration_minutes": 15},
+        {
+            "name": "Vaccination",
+            "price": "50.00",
+            "tax_rate": "8.00",
+            "duration_minutes": 15,
+        },
     )
 
     assert response.status_code == 201
-    assert Service.objects.filter(name="Vaccination").exists()
+    assert Service.objects.filter(name="Vaccination", tax_rate=Decimal("8.00")).exists()
 
 
 @pytest.mark.django_db
@@ -552,11 +558,14 @@ def test_visit_service_create(auth_client, visit, service):
             "service": service.pk,
             "quantity": "1.00",
             "price": "100.00",
+            "tax_rate": "23.00",
         },
     )
 
     assert response.status_code == 201
-    assert VisitService.objects.filter(visit=visit, service=service).exists()
+    assert VisitService.objects.filter(
+        visit=visit, service=service, tax_rate=Decimal("23.00")
+    ).exists()
 
 
 @pytest.mark.django_db

@@ -146,6 +146,9 @@ class Service(models.Model):
     name = models.CharField(max_length=255, validators=[MaxLengthValidator(200)])
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -165,6 +168,9 @@ class VisitService(models.Model):
     )
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
     notes = models.CharField(
         max_length=255, blank=True, validators=[MaxLengthValidator(255)]
     )

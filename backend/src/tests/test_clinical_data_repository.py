@@ -106,6 +106,7 @@ def service_model(db):
         name="Consultation",
         description="General checkup",
         price=Decimal("100.00"),
+        tax_rate=Decimal("23.00"),
         duration_minutes=30,
     )
 
@@ -452,6 +453,7 @@ class TestServiceRepository:
 
         assert service.name == "Consultation"
         assert service.price == Decimal("100.00")
+        assert service.tax_rate == Decimal("23.00")
 
     @pytest.mark.django_db
     def test_list_returns_all(self, service_model):
@@ -470,14 +472,17 @@ class TestServiceRepository:
                 id=service.id,
                 name=service.name,
                 price=Decimal("120.00"),
+                tax_rate=Decimal("8.00"),
                 is_active=False,
             )
         )
 
         assert updated.price == Decimal("120.00")
+        assert updated.tax_rate == Decimal("8.00")
         assert updated.is_active is False
         service_model.refresh_from_db()
         assert service_model.price == Decimal("120.00")
+        assert service_model.tax_rate == Decimal("8.00")
         assert service_model.is_active is False
 
     @pytest.mark.django_db
@@ -499,10 +504,12 @@ class TestVisitServiceRepository:
                 service=service,
                 quantity=Decimal("1.00"),
                 price=Decimal("100.00"),
+                tax_rate=Decimal("23.00"),
             )
         )
 
         assert visit_service.id is not None
+        assert visit_service.tax_rate == Decimal("23.00")
         assert VisitServiceModel.objects.filter(
             visit_id=visit_model.id, service_id=service_model.id
         ).exists()
@@ -535,11 +542,13 @@ class TestVisitServiceRepository:
                 visit=visit_service.visit,
                 service=visit_service.service,
                 quantity=Decimal("3.00"),
+                tax_rate=Decimal("8.00"),
                 notes="Discounted",
             )
         )
 
         assert updated.quantity == Decimal("3.00")
+        assert updated.tax_rate == Decimal("8.00")
         assert updated.notes == "Discounted"
 
     @pytest.mark.django_db
