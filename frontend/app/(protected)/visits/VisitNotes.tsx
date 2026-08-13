@@ -11,6 +11,7 @@ import {
 import { TrashIcon } from "@/components/icons";
 import RichTextEditor from "@/components/RichTextEditor";
 import RichTextViewer from "@/components/RichTextViewer";
+import { useAuth } from "@/lib/auth-context";
 
 function formatDateLabel(iso: string): string {
   const date = new Date(iso);
@@ -53,6 +54,7 @@ function groupNotesByDate(notes: VisitNote[]): NoteGroup[] {
 }
 
 export default function VisitNotes({ visitId }: { visitId: number }) {
+  const { currentUser } = useAuth();
   const [notes, setNotes] = useState<VisitNote[]>([]);
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +96,11 @@ export default function VisitNotes({ visitId }: { visitId: number }) {
 
   const noteGroups = useMemo(() => groupNotesByDate(notes), [notes]);
 
+  function canDelete(note: VisitNote): boolean {
+    if (!currentUser) return false;
+    return currentUser.isAdmin || note.author === currentUser.id;
+  }
+
   async function handleDelete(id: number) {
     if (!confirm("Delete this note?")) return;
     try {
@@ -133,14 +140,16 @@ export default function VisitNotes({ visitId }: { visitId: number }) {
                         {n.author_name ? `${n.author_name} · ` : ""}
                         {formatTime(n.created_at)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(n.id)}
-                        title="Delete"
-                        className="flex size-6 flex-none items-center justify-center rounded-md text-ink-faint opacity-0 transition-opacity hover:bg-danger-soft hover:text-danger focus-visible:opacity-100 group-hover/note:opacity-100"
-                      >
-                        <TrashIcon />
-                      </button>
+                      {canDelete(n) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(n.id)}
+                          title="Delete"
+                          className="flex size-6 flex-none items-center justify-center rounded-md text-ink-faint opacity-0 transition-opacity hover:bg-danger-soft hover:text-danger focus-visible:opacity-100 group-hover/note:opacity-100"
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
                     </div>
                     <RichTextViewer html={n.content} className="text-ink" />
                   </li>

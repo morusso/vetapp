@@ -1,11 +1,8 @@
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
+from user.views import UserTokenObtainPairView
 from vetapp import views
 
 # Each API version is wired up explicitly, per resource, rather than captured
@@ -18,7 +15,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/health/', views.HealthView.as_view(), V1, name='api-health'),
     path(
-        'api/v1/token/', TokenObtainPairView.as_view(), V1, name='token_obtain_pair'
+        'api/v1/token/', UserTokenObtainPairView.as_view(), V1, name='token_obtain_pair'
     ),
     path(
         'api/v1/token/refresh/',

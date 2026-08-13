@@ -28,6 +28,20 @@ def auth_client(client, user):
 
 
 @pytest.fixture
+def admin_user(db):
+    return User.objects.create_user(
+        email="admin@example.com", password="s3cr3t-pass", is_staff=True
+    )
+
+
+@pytest.fixture
+def admin_client_(client, admin_user):
+    access_token = RefreshToken.for_user(admin_user).access_token
+    client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {access_token}"
+    return client
+
+
+@pytest.fixture
 def patient(db):
     owner = Client.objects.create(
         first_name="Jan",
@@ -349,6 +363,37 @@ def test_visit_note_update(auth_client, visit):
     assert response.status_code == 200
     note.refresh_from_db()
     assert note.content == "Updated content"
+
+
+@pytest.mark.django_db
+def test_visit_note_delete_by_author_succeeds(auth_client, visit, user):
+    note = VisitNote.objects.create(visit=visit, content="Initial", author=user)
+
+    response = auth_client.delete(f"/api/v1/clinical-data/visits/notes/{note.pk}/")
+
+    assert response.status_code == 204
+    assert not VisitNote.objects.filter(pk=note.pk).exists()
+
+
+@pytest.mark.django_db
+def test_visit_note_delete_by_other_user_forbidden(auth_client, visit, user):
+    other_author = User.objects.create_user(email="other@example.com", password="s3cr3t-pass")
+    note = VisitNote.objects.create(visit=visit, content="Initial", author=other_author)
+
+    response = auth_client.delete(f"/api/v1/clinical-data/visits/notes/{note.pk}/")
+
+    assert response.status_code == 403
+    assert VisitNote.objects.filter(pk=note.pk).exists()
+
+
+@pytest.mark.django_db
+def test_visit_note_delete_by_admin_succeeds(admin_client_, visit, user):
+    note = VisitNote.objects.create(visit=visit, content="Initial", author=user)
+
+    response = admin_client_.delete(f"/api/v1/clinical-data/visits/notes/{note.pk}/")
+
+    assert response.status_code == 204
+    assert not VisitNote.objects.filter(pk=note.pk).exists()
 
 
 @pytest.mark.django_db

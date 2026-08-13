@@ -11,17 +11,20 @@ import {
 } from "react";
 import {
   clearTokens,
+  decodeCurrentUser,
   decodeExpiry,
   getAccessToken,
   getRefreshToken,
   login as apiLogin,
   logout as apiLogout,
   refreshAccessToken,
+  type CurrentUser,
 } from "./auth";
 
 type AuthContextValue = {
   isAuthenticated: boolean;
   isLoading: boolean;
+  currentUser: CurrentUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -34,6 +37,7 @@ const REFRESH_BUFFER_MS = 60_000;
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // breaks the reference cycle between performRefresh and scheduleRefresh
   const scheduleRefreshRef = useRef<(accessToken: string) => void>(() => {});
@@ -49,11 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const newAccessToken = await refreshAccessToken();
       setIsAuthenticated(true);
+      setCurrentUser(decodeCurrentUser(newAccessToken));
       scheduleRefreshRef.current(newAccessToken);
     } catch {
       clearTokens();
       clearRefreshTimer();
       setIsAuthenticated(false);
+      setCurrentUser(null);
     }
   }, [clearRefreshTimer]);
 
@@ -87,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (isAccessStillValid && access) {
         setIsAuthenticated(true);
+        setCurrentUser(decodeCurrentUser(access));
         scheduleRefreshRef.current(access);
         setIsLoading(false);
         return;
@@ -104,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { access } = await apiLogin(email, password);
     setIsAuthenticated(true);
+    setCurrentUser(decodeCurrentUser(access));
     scheduleRefreshRef.current(access);
   }, []);
 
@@ -111,10 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearRefreshTimer();
     await apiLogout();
     setIsAuthenticated(false);
+    setCurrentUser(null);
   }, [clearRefreshTimer]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, currentUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

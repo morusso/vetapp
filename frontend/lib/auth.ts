@@ -40,16 +40,30 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
-/** Returns the token's expiry time (ms epoch) read from the JWT payload, without verifying the signature. */
-export function decodeExpiry(token: string): number | null {
+/** Reads the JWT payload without verifying the signature. */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split(".")[1];
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json = JSON.parse(atob(base64));
-    return typeof json.exp === "number" ? json.exp * 1000 : null;
+    return JSON.parse(atob(base64));
   } catch {
     return null;
   }
+}
+
+/** Returns the token's expiry time (ms epoch) read from the JWT payload, without verifying the signature. */
+export function decodeExpiry(token: string): number | null {
+  const json = decodeJwtPayload(token);
+  return typeof json?.exp === "number" ? json.exp * 1000 : null;
+}
+
+export type CurrentUser = { id: number; isAdmin: boolean };
+
+/** Reads the current user's id and admin status from the access token's claims. */
+export function decodeCurrentUser(token: string): CurrentUser | null {
+  const json = decodeJwtPayload(token);
+  if (typeof json?.user_id !== "number") return null;
+  return { id: json.user_id, isAdmin: json.is_staff === true };
 }
 
 export async function login(email: string, password: string): Promise<TokenPair> {
