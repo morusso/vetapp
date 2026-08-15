@@ -1,11 +1,19 @@
+import logging
+from datetime import timedelta
+
 from celery import shared_task
+from django.core.mail import send_mail
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from clinical_data.models import Medicine
+from clinical_data.models import Medicine, VisitService
 from notifications.services import notify_group
 
+logger = logging.getLogger(__name__)
+
 LOW_STOCK_NOTIFICATION_GROUP = "admin"
+
+VACCINE_REMINDER_LEAD_DAYS = 7
 
 
 @shared_task
@@ -38,3 +46,54 @@ def check_medicine_stock_levels():
                 "minimum_stock_level": str(medicine.minimum_stock_level),
             },
         )
+
+
+@shared_task
+def check_vaccine_expirations():
+    """Runs daily (see the periodic task set up in migration 0007) and reminds
+    clients whose pet's vaccine protection is about to end, VACCINE_REMINDER_LEAD_DAYS
+    days ahead of VisitService.vaccine_valid_until, so a booster can be booked in
+    time. Each VisitService is only ever due on one day, so this fires once per
+    reminder rather than repeating every day until the appointment is booked.
+
+    The channel is the service's own notification_channel if set, otherwise the
+    client's preferred_notification_channel.
+    """
+    reminder_date = timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS)
+    due = VisitService.objects.filter(vaccine_valid_until=reminder_date).select_related(
+        "service", "visit__patient__owner"
+    )
+
+    for visit_service in due:
+        client = visit_service.visit.patient.owner
+        channel = visit_service.notification_channel or client.preferred_notification_channel
+        _send_vaccine_reminder(visit_service, client, channel)
+
+
+def _send_vaccine_reminder(visit_service, client, channel):
+    patient_name = visit_service.visit.patient.name
+    service_name = visit_service.service.name
+    valid_until = visit_service.vaccine_valid_until
+
+    if channel == VisitService.NotificationChannel.SMS:
+        # No SMS provider is wired up yet - log what would have been sent instead.
+        logger.info(
+            "SMS vaccine reminder to %s (%s): %s's %s expires on %s.",
+            client,
+            client.phone_number,
+            patient_name,
+            service_name,
+            valid_until,
+        )
+        return
+
+    send_mail(
+        subject=f"{patient_name}'s vaccination is expiring soon",
+        message=(
+            f"Hi {client.first_name},\n\n"
+            f"{patient_name}'s {service_name} protection ends on {valid_until}. "
+            "Please book a booster appointment before then.\n\nVetApp"
+        ),
+        from_email=None,
+        recipient_list=[client.email],
+    )

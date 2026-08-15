@@ -58,4 +58,24 @@ urlpatterns = [
         views.PrescribedMedicineDetailView.as_view(),
         name="prescribed_medicine_detail",
     ),
+    path(
+        "services/",
+        views.ServiceListCreateView.as_view(),
+        name="service_list_create",
+    ),
+    path(
+        "services/<int:pk>/",
+        views.ServiceDetailView.as_view(),
+        name="service_detail",
+    ),
+    path(
+        "visits/services/",
+        views.VisitServiceListCreateView.as_view(),
+        name="visit_service_list_create",
+    ),
+    path(
+        "visits/services/<int:pk>/",
+        views.VisitServiceDetailView.as_view(),
+        name="visit_service_detail",
+    ),
 ]

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
+import type { NotificationChannel } from "@/lib/clients";
 import RichTextEditor from "@/components/RichTextEditor";
 
 export type ClientFormValues = {
@@ -13,7 +14,13 @@ export type ClientFormValues = {
   city: string;
   postal_code: string;
   notes: string;
+  preferred_notification_channel: NotificationChannel;
 };
+
+const NOTIFICATION_CHANNELS: { value: NotificationChannel; label: string }[] = [
+  { value: "email", label: "Email" },
+  { value: "sms", label: "SMS" },
+];
 
 const PHONE_NUMBER_PATTERN = /^\+?[0-9\s-]{7,20}$/;
 const PHONE_NUMBER_ERROR = "Enter a valid phone number (digits, spaces, - and leading + only).";
@@ -220,6 +227,42 @@ export default function ClientForm({
               title: POSTAL_CODE_ERROR,
               placeholder: "e.g. 00-950",
             })}
+          </div>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-0.5 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+            Notifications
+          </legend>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="preferred_notification_channel"
+              className="text-xs font-semibold text-ink-muted"
+            >
+              Preferred channel
+            </label>
+            <select
+              id="preferred_notification_channel"
+              value={values.preferred_notification_channel}
+              onChange={(e) =>
+                handleChange(
+                  "preferred_notification_channel",
+                  e.target.value as NotificationChannel
+                )
+              }
+              className="rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none"
+            >
+              {NOTIFICATION_CHANNELS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            {fieldErrors.preferred_notification_channel?.map((msg) => (
+              <p key={msg} className="text-xs text-danger">
+                {msg}
+              </p>
+            ))}
           </div>
         </fieldset>
 

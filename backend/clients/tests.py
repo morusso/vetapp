@@ -55,6 +55,44 @@ def test_client_create(auth_client):
     )
     assert response.status_code == 201
     assert Client.objects.filter(email="anna.nowak@example.com").exists()
+    assert response.data["preferred_notification_channel"] == "email"
+
+
+@pytest.mark.django_db
+def test_client_create_with_sms_preference(auth_client):
+    response = auth_client.post(
+        "/api/v1/clients/",
+        {
+            "first_name": "Anna",
+            "last_name": "Nowak",
+            "email": "anna.nowak@example.com",
+            "phone_number": "987654321",
+            "street": "Kwiatowa 5",
+            "city": "Krakow",
+            "postal_code": "30-001",
+            "preferred_notification_channel": "sms",
+        },
+    )
+    assert response.status_code == 201
+    assert Client.objects.get(email="anna.nowak@example.com").preferred_notification_channel == "sms"
+
+
+@pytest.mark.django_db
+def test_client_create_rejects_invalid_notification_channel(auth_client):
+    response = auth_client.post(
+        "/api/v1/clients/",
+        {
+            "first_name": "Anna",
+            "last_name": "Nowak",
+            "email": "anna.nowak@example.com",
+            "phone_number": "987654321",
+            "street": "Kwiatowa 5",
+            "city": "Krakow",
+            "postal_code": "30-001",
+            "preferred_notification_channel": "fax",
+        },
+    )
+    assert response.status_code == 400
 
 
 @pytest.mark.django_db
@@ -81,6 +119,18 @@ def test_client_update(auth_client, sample_client):
     assert response.status_code == 200
     sample_client.refresh_from_db()
     assert sample_client.city == "Gdansk"
+
+
+@pytest.mark.django_db
+def test_client_update_notification_channel(auth_client, sample_client):
+    response = auth_client.patch(
+        f"/api/v1/clients/{sample_client.pk}/",
+        {"preferred_notification_channel": "sms"},
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    sample_client.refresh_from_db()
+    assert sample_client.preferred_notification_channel == "sms"
 
 
 @pytest.mark.django_db

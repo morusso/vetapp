@@ -14,6 +14,7 @@ import {
   MedicinesIcon,
   PasswordIcon,
   PatientsIcon,
+  ServicesIcon,
   StockBatchesIcon,
   UsersIcon,
   VisitsIcon,
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: "/animal-types", label: "Animal types", icon: AnimalTypesIcon },
   { href: "/medicines", label: "Medicines", icon: MedicinesIcon },
   { href: "/medicine-batches", label: "Stock batches", icon: StockBatchesIcon },
+  { href: "/services", label: "Services", icon: ServicesIcon },
   { href: "/users", label: "Users", icon: UsersIcon },
 ];
 

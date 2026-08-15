@@ -83,6 +83,7 @@ class Visit:
     updated_at: datetime | None = field(default=None)
     notes: list[VisitNote] = field(default_factory=list)
     prescribed_medicines: list[PrescribedMedicine] = field(default_factory=list)
+    visit_services: list[VisitService] = field(default_factory=list)
 
     @property
     def pk(self) -> int | None:
@@ -125,3 +126,45 @@ class PrescribedMedicine:
 
     def __str__(self) -> str:
         return f"{self.medicine.name} x{self.quantity}"
+
+
+@dataclass(kw_only=True)
+class Service:
+    id: int | None = field(default=None)
+    name: str
+    description: str = field(default="")
+    price: Decimal
+    tax_rate: Decimal | None = field(default=None)
+    duration_minutes: int | None = field(default=None)
+    is_active: bool = field(default=True)
+    created_at: datetime | None = field(default=None)
+    updated_at: datetime | None = field(default=None)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return self.name
+
+
+@dataclass(kw_only=True)
+class VisitService:
+    id: int | None = field(default=None)
+    visit: Visit
+    service: Service
+    quantity: Decimal = field(default=Decimal("1"))
+    price: Decimal | None = field(default=None)
+    tax_rate: Decimal | None = field(default=None)
+    notes: str = field(default="")
+    vaccine_valid_until: date | None = field(default=None)
+    notification_channel: str = field(default="")
+    created_at: datetime | None = field(default=None)
+    updated_at: datetime | None = field(default=None)
+
+    @property
+    def pk(self) -> int | None:
+        return self.id
+
+    def __str__(self) -> str:
+        return f"{self.service.name} x{self.quantity}"

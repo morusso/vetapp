@@ -206,6 +206,21 @@ export default function PatientFullPage() {
                   </div>
                 )}
 
+                {v.visit_services.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {v.visit_services.map((s) => (
+                      <span
+                        key={s.id}
+                        className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-muted"
+                      >
+                        {s.service_name} × {s.quantity}
+                        {s.notes && ` — ${s.notes}`}
+                        {s.vaccine_valid_until && ` (valid until ${s.vaccine_valid_until})`}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {v.notes.length > 0 && (
                   <p className="mt-2 text-xs text-ink-faint">
                     {v.notes.length} note{v.notes.length === 1 ? "" : "s"}

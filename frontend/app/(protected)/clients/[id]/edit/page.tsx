@@ -32,6 +32,7 @@ export default function EditClientPage() {
             city: client.city,
             postal_code: client.postal_code,
             notes: client.notes ?? "",
+            preferred_notification_channel: client.preferred_notification_channel,
           }}
           submitLabel="Save"
           onSubmit={async (values) => {

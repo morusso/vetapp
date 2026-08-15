@@ -2,6 +2,8 @@ import { API_V1_URL } from "./auth";
 import { request, type Paginated } from "./api";
 import type { Patient } from "./patients";
 
+export type NotificationChannel = "email" | "sms";
+
 export type Client = {
   id: number;
   first_name: string;
@@ -12,6 +14,7 @@ export type Client = {
   city: string;
   postal_code: string;
   notes: string;
+  preferred_notification_channel: NotificationChannel;
   created_at: string;
   updated_at: string;
 };
@@ -25,6 +28,7 @@ export type ClientInput = {
   city: string;
   postal_code: string;
   notes?: string;
+  preferred_notification_channel?: NotificationChannel;
 };
 
 const CLIENTS_URL = `${API_V1_URL}/clients/`;

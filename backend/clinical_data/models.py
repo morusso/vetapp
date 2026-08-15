@@ -140,3 +140,61 @@ class PrescribedMedicine(models.Model):
 
     def __str__(self):
         return f"{self.medicine.name} x{self.quantity} ({self.visit})"
+
+
+class Service(models.Model):
+    name = models.CharField(max_length=255, validators=[MaxLengthValidator(200)])
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    duration_minutes = models.PositiveIntegerField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class VisitService(models.Model):
+    class NotificationChannel(models.TextChoices):
+        EMAIL = "email", "Email"
+        SMS = "sms", "SMS"
+
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name="visit_services")
+    service = models.ForeignKey(
+        Service, on_delete=models.PROTECT, related_name="visit_services"
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    notes = models.CharField(
+        max_length=255, blank=True, validators=[MaxLengthValidator(255)]
+    )
+    vaccine_valid_until = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date the vaccine's protection ends and a booster is due.",
+    )
+    notification_channel = models.CharField(
+        max_length=10,
+        choices=NotificationChannel.choices,
+        blank=True,
+        help_text="How to remind the client before this expires. Falls back to the "
+        "client's preferred channel when blank.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.service.name} ({self.visit})"

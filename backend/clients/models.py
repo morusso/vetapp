@@ -3,6 +3,10 @@ from django.db import models
 
 
 class Client(models.Model):
+    class NotificationChannel(models.TextChoices):
+        EMAIL = "email", "Email"
+        SMS = "sms", "SMS"
+
     first_name = models.CharField(max_length=255, validators=[MaxLengthValidator(150)])
     last_name = models.CharField(max_length=255, validators=[MaxLengthValidator(150)])
     email = models.EmailField()
@@ -11,6 +15,11 @@ class Client(models.Model):
     city = models.CharField(max_length=255, validators=[MaxLengthValidator(100)])
     postal_code = models.CharField(max_length=255, validators=[MaxLengthValidator(20)])
     notes = models.TextField(blank=True)
+    preferred_notification_channel = models.CharField(
+        max_length=10,
+        choices=NotificationChannel.choices,
+        default=NotificationChannel.EMAIL,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

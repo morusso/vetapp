@@ -12,23 +12,29 @@ from clients.models import Client as ClientModel
 from clinical_data.models import Medicine as MedicineModel
 from clinical_data.models import MedicineBatch as MedicineBatchModel
 from clinical_data.models import PrescribedMedicine as PrescribedMedicineModel
+from clinical_data.models import Service as ServiceModel
 from clinical_data.models import Visit as VisitModel
 from clinical_data.models import VisitNote as VisitNoteModel
+from clinical_data.models import VisitService as VisitServiceModel
 from src.models.clinical_data import (
     Medicine,
     MedicineBatch,
     MedicineForm,
     PrescribedMedicine,
+    Service,
     Visit,
     VisitNote,
+    VisitService,
 )
 from src.repositories.animals import patient_to_dataclass
 from src.repositories.clinical_data import (
     MedicineBatchRepository,
     MedicineRepository,
     PrescribedMedicineRepository,
+    ServiceRepository,
     VisitNoteRepository,
     VisitRepository,
+    VisitServiceRepository,
 )
 from src.repositories.user import user_to_dataclass
 
@@ -91,6 +97,17 @@ def medicine_batch_model(medicine_model):
         quantity=Decimal("50.00"),
         expiry_date=date(2027, 1, 1),
         received_at=date(2026, 1, 1),
+    )
+
+
+@pytest.fixture
+def service_model(db):
+    return ServiceModel.objects.create(
+        name="Consultation",
+        description="General checkup",
+        price=Decimal("100.00"),
+        tax_rate=Decimal("23.00"),
+        duration_minutes=30,
     )
 
 
@@ -414,3 +431,143 @@ class TestPrescribedMedicineRepository:
         PrescribedMedicineRepository().delete(obj.id)
 
         assert not PrescribedMedicineModel.objects.filter(id=obj.id).exists()
+
+
+class TestServiceRepository:
+    @pytest.mark.django_db
+    def test_add_creates_service(self):
+        service = ServiceRepository().add(
+            Service(name="Vaccination", price=Decimal("50.00"), duration_minutes=15)
+        )
+
+        assert service.id is not None
+        assert ServiceModel.objects.filter(name="Vaccination").exists()
+
+    @pytest.mark.django_db
+    def test_get_returns_none_for_missing(self):
+        assert ServiceRepository().get(999999) is None
+
+    @pytest.mark.django_db
+    def test_get_returns_existing(self, service_model):
+        service = ServiceRepository().get(service_model.id)
+
+        assert service.name == "Consultation"
+        assert service.price == Decimal("100.00")
+        assert service.tax_rate == Decimal("23.00")
+
+    @pytest.mark.django_db
+    def test_list_returns_all(self, service_model):
+        ServiceModel.objects.create(name="Vaccination", price=Decimal("50.00"))
+
+        services = ServiceRepository().list()
+
+        assert {s.name for s in services} == {"Consultation", "Vaccination"}
+
+    @pytest.mark.django_db
+    def test_update_persists_changes(self, service_model):
+        service = ServiceRepository().get(service_model.id)
+
+        updated = ServiceRepository().update(
+            Service(
+                id=service.id,
+                name=service.name,
+                price=Decimal("120.00"),
+                tax_rate=Decimal("8.00"),
+                is_active=False,
+            )
+        )
+
+        assert updated.price == Decimal("120.00")
+        assert updated.tax_rate == Decimal("8.00")
+        assert updated.is_active is False
+        service_model.refresh_from_db()
+        assert service_model.price == Decimal("120.00")
+        assert service_model.tax_rate == Decimal("8.00")
+        assert service_model.is_active is False
+
+    @pytest.mark.django_db
+    def test_delete_removes_service(self, service_model):
+        ServiceRepository().delete(service_model.id)
+
+        assert not ServiceModel.objects.filter(id=service_model.id).exists()
+
+
+class TestVisitServiceRepository:
+    @pytest.mark.django_db
+    def test_add_creates_visit_service(self, visit_model, service_model):
+        visit = VisitRepository().get(visit_model.id)
+        service = ServiceRepository().get(service_model.id)
+
+        visit_service = VisitServiceRepository().add(
+            VisitService(
+                visit=visit,
+                service=service,
+                quantity=Decimal("1.00"),
+                price=Decimal("100.00"),
+                tax_rate=Decimal("23.00"),
+                vaccine_valid_until=date(2027, 1, 15),
+                notification_channel="sms",
+            )
+        )
+
+        assert visit_service.id is not None
+        assert visit_service.tax_rate == Decimal("23.00")
+        assert visit_service.vaccine_valid_until == date(2027, 1, 15)
+        assert visit_service.notification_channel == "sms"
+        assert VisitServiceModel.objects.filter(
+            visit_id=visit_model.id,
+            service_id=service_model.id,
+            vaccine_valid_until=date(2027, 1, 15),
+            notification_channel="sms",
+        ).exists()
+
+    @pytest.mark.django_db
+    def test_get_returns_none_for_missing(self):
+        assert VisitServiceRepository().get(999999) is None
+
+    @pytest.mark.django_db
+    def test_list_returns_all(self, visit_model, service_model):
+        VisitServiceModel.objects.create(
+            visit=visit_model, service=service_model, quantity=Decimal("2.00")
+        )
+
+        visit_services = VisitServiceRepository().list()
+
+        assert len(visit_services) == 1
+        assert visit_services[0].service.name == "Consultation"
+
+    @pytest.mark.django_db
+    def test_update_persists_changes(self, visit_model, service_model):
+        obj = VisitServiceModel.objects.create(
+            visit=visit_model, service=service_model, quantity=Decimal("1.00")
+        )
+        visit_service = VisitServiceRepository().get(obj.id)
+
+        updated = VisitServiceRepository().update(
+            VisitService(
+                id=visit_service.id,
+                visit=visit_service.visit,
+                service=visit_service.service,
+                quantity=Decimal("3.00"),
+                tax_rate=Decimal("8.00"),
+                notes="Discounted",
+                vaccine_valid_until=date(2027, 6, 1),
+                notification_channel="email",
+            )
+        )
+
+        assert updated.quantity == Decimal("3.00")
+        assert updated.tax_rate == Decimal("8.00")
+        assert updated.notes == "Discounted"
+        assert updated.vaccine_valid_until == date(2027, 6, 1)
+        assert updated.notification_channel == "email"
+
+    @pytest.mark.django_db
+    def test_delete_removes_visit_service(self, visit_model, service_model):
+        obj = VisitServiceModel.objects.create(
+            visit=visit_model, service=service_model, quantity=Decimal("1.00")
+        )
+
+        VisitServiceRepository().delete(obj.id)
+
+        assert not VisitServiceModel.objects.filter(id=obj.id).exists()
