@@ -215,6 +215,7 @@ export default function PatientFullPage() {
                       >
                         {s.service_name} × {s.quantity}
                         {s.notes && ` — ${s.notes}`}
+                        {s.vaccine_valid_until && ` (valid until ${s.vaccine_valid_until})`}
                       </span>
                     ))}
                   </div>

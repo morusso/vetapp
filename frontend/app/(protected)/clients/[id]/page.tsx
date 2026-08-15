@@ -13,6 +13,11 @@ const SEX_LABELS: Record<string, string> = {
   unknown: "Unknown",
 };
 
+const NOTIFICATION_CHANNEL_LABELS: Record<string, string> = {
+  email: "Email",
+  sms: "SMS",
+};
+
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [client, setClient] = useState<ClientWithPatients | null>(null);
@@ -68,6 +73,13 @@ export default function ClientDetailPage() {
               <div>
                 <div className="text-xs text-ink-faint">Phone number</div>
                 <div className="font-mono">{client.phone_number}</div>
+              </div>
+              <div>
+                <div className="text-xs text-ink-faint">Preferred notification channel</div>
+                <div>
+                  {NOTIFICATION_CHANNEL_LABELS[client.preferred_notification_channel] ??
+                    client.preferred_notification_channel}
+                </div>
               </div>
             </div>
           </fieldset>

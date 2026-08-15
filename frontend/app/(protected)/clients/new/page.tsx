@@ -20,6 +20,7 @@ export default function NewClientPage() {
           city: "",
           postal_code: "",
           notes: "",
+          preferred_notification_channel: "email",
         }}
         submitLabel="Create"
         onSubmit={async (values) => {

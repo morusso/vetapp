@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
+import type { NotificationChannel } from "@/lib/clients";
 import { listAllServices, type Service } from "@/lib/services";
 import {
   createVisitService,
@@ -11,12 +12,19 @@ import {
 } from "@/lib/visits";
 import { TrashIcon } from "@/components/icons";
 
+const NOTIFICATION_CHANNEL_LABELS: Record<string, string> = {
+  email: "Email",
+  sms: "SMS",
+};
+
 export default function VisitServices({ visitId }: { visitId: number }) {
   const [visitServices, setVisitServices] = useState<VisitService[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [service, setService] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [notes, setNotes] = useState("");
+  const [vaccineValidUntil, setVaccineValidUntil] = useState("");
+  const [notificationChannel, setNotificationChannel] = useState<NotificationChannel | "">("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,10 +60,14 @@ export default function VisitServices({ visitId }: { visitId: number }) {
         service: Number(service),
         quantity,
         notes,
+        vaccine_valid_until: vaccineValidUntil || null,
+        notification_channel: notificationChannel,
       });
       setService("");
       setQuantity("1");
       setNotes("");
+      setVaccineValidUntil("");
+      setNotificationChannel("");
       load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save this service.");
@@ -96,6 +108,16 @@ export default function VisitServices({ visitId }: { visitId: number }) {
                 <span className="font-medium">{vs.service_name}</span>{" "}
                 <span className="font-mono text-ink-muted">× {vs.quantity}</span>
                 {vs.notes && <span className="text-ink-faint"> — {vs.notes}</span>}
+                {vs.vaccine_valid_until && (
+                  <span className="ml-2 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-muted">
+                    Valid until {vs.vaccine_valid_until}
+                  </span>
+                )}
+                {vs.notification_channel && (
+                  <span className="ml-1.5 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-muted">
+                    Remind via {NOTIFICATION_CHANNEL_LABELS[vs.notification_channel]}
+                  </span>
+                )}
               </span>
               <button
                 type="button"
@@ -170,6 +192,44 @@ export default function VisitServices({ visitId }: { visitId: number }) {
             >
               Add
             </button>
+          </div>
+
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="vaccine_valid_until"
+                className="text-xs font-semibold text-ink-muted"
+              >
+                Vaccine valid until
+              </label>
+              <input
+                id="vaccine_valid_until"
+                type="date"
+                value={vaccineValidUntil}
+                onChange={(e) => setVaccineValidUntil(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-1">
+              <label
+                htmlFor="notification_channel"
+                className="text-xs font-semibold text-ink-muted"
+              >
+                Remind client via
+              </label>
+              <select
+                id="notification_channel"
+                value={notificationChannel}
+                onChange={(e) =>
+                  setNotificationChannel(e.target.value as NotificationChannel | "")
+                }
+                className={inputClass}
+              >
+                <option value="">Client&apos;s default</option>
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+              </select>
+            </div>
           </div>
         </form>
       </div>

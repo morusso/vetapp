@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
 import { request, type Paginated } from "./api";
+import type { NotificationChannel } from "./clients";
 
 export type Visit = {
   id: number;
@@ -62,6 +63,8 @@ export type VisitService = {
   price: string | null;
   tax_rate: string | null;
   notes: string;
+  vaccine_valid_until: string | null;
+  notification_channel: NotificationChannel | "";
   created_at: string;
   updated_at: string;
 };
@@ -73,6 +76,8 @@ export type VisitServiceInput = {
   price?: string | null;
   tax_rate?: string | null;
   notes?: string;
+  vaccine_valid_until?: string | null;
+  notification_channel?: NotificationChannel | "";
 };
 
 export type VisitWithDetails = Visit & {
