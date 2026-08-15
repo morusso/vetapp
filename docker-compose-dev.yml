@@ -36,6 +36,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       CHANNELS_REDIS_URL: redis://redis:6379/1
+      OLLAMA_BASE_URL: http://ollama:11434
     ports:
       - "8000:8000"
     volumes:
@@ -46,6 +47,8 @@ services:
       redis:
         condition: service_healthy
       mailcatcher:
+        condition: service_started
+      ollama:
         condition: service_started
 
   redis:
@@ -79,6 +82,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       CHANNELS_REDIS_URL: redis://redis:6379/1
+      OLLAMA_BASE_URL: http://ollama:11434
     volumes:
       - ./backend:/app
     depends_on:
@@ -87,6 +91,8 @@ services:
       redis:
         condition: service_healthy
       backend:
+        condition: service_started
+      ollama:
         condition: service_started
 
   celery_beat:
@@ -161,6 +167,34 @@ services:
       - "127.0.0.1:1080:1080"
       - "127.0.0.1:1025:1025"
 
+  # Local LLM used to draft client-facing messages (see backend/notifications/ai.py).
+  # Runs entirely on-prem so clinical/treatment history never leaves this stack -
+  # only 127.0.0.1 is exposed, and the model is pulled once into a named volume.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: vetapp_ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_MODEL: qwen2.5:3b-instruct
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        ollama pull "$$OLLAMA_MODEL"
+        wait
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - vetapp_ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
 
 volumes:
   vetapp_frontend_node_modules:
+  vetapp_ollama_data:

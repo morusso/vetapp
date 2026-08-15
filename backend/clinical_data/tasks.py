@@ -7,6 +7,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 
 from clinical_data.models import Medicine, VisitService
+from notifications.ai import draft_message
 from notifications.services import notify_group
 
 logger = logging.getLogger(__name__)
@@ -89,11 +90,26 @@ def _send_vaccine_reminder(visit_service, client, channel):
 
     send_mail(
         subject=f"{patient_name}'s vaccination is expiring soon",
-        message=(
-            f"Hi {client.first_name},\n\n"
-            f"{patient_name}'s {service_name} protection ends on {valid_until}. "
-            "Please book a booster appointment before then.\n\nVetApp"
-        ),
+        message=_vaccine_reminder_body(patient_name, service_name, valid_until, client),
         from_email=None,
         recipient_list=[client.email],
     )
+
+
+def _vaccine_reminder_body(patient_name, service_name, valid_until, client):
+    fallback = (
+        f"Hi {client.first_name},\n\n"
+        f"{patient_name}'s {service_name} protection ends on {valid_until}. "
+        "Please book a booster appointment before then.\n\nVetApp"
+    )
+
+    prompt = (
+        f"Write a short, warm email reminding {client.first_name}, a vet clinic client, "
+        f"that their pet {patient_name}'s {service_name} protection ends on {valid_until} "
+        "and they should book a booster appointment before then. "
+        "Keep it under 80 words, plain text, sign off as VetApp. "
+        "Reply with only the email body, no subject line."
+    )
+    return draft_message(
+        prompt, system="You draft brief, friendly reminder emails for a veterinary clinic."
+    ) or fallback

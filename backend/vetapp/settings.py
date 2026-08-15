@@ -179,6 +179,15 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@vetapp.local')
 
 
+# AI-assisted client messaging (see notifications/ai.py)
+# Runs against a local Ollama instance so clinical/client data never leaves the
+# clinic's own infrastructure. Reminders fall back to their static template
+# whenever this is unset (the default), so it's safe to leave unconfigured in dev/CI.
+
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', '')
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5:3b-instruct')
+
+
 # Celery
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html
 

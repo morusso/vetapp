@@ -25,6 +25,7 @@ from clinical_data.tasks import (
     check_vaccine_expirations,
 )
 from notifications.models import Notification
+from notifications.tests import _fake_ollama_urlopen
 
 User = get_user_model()
 
@@ -872,3 +873,44 @@ def test_check_vaccine_expirations_ignores_services_without_vaccine_date(visit, 
     check_vaccine_expirations()
 
     assert mail.outbox == []
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_body_falls_back_without_ai_configured(
+    visit, service, settings
+):
+    settings.OLLAMA_BASE_URL = ""
+    reminder_date = timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS)
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=reminder_date,
+    )
+
+    check_vaccine_expirations()
+
+    assert "book a booster appointment" in mail.outbox[0].body
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_body_uses_ai_drafted_text_when_configured(
+    visit, service, settings, monkeypatch
+):
+    settings.OLLAMA_BASE_URL = "http://ollama:11434"
+    monkeypatch.setattr(
+        "notifications.ai.urllib_request.urlopen",
+        _fake_ollama_urlopen(text="Hey there, time for a booster!"),
+    )
+    reminder_date = timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS)
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=reminder_date,
+    )
+
+    check_vaccine_expirations()
+
+    assert mail.outbox[0].body == "Hey there, time for a booster!"
+    assert visit.patient.name in mail.outbox[0].subject

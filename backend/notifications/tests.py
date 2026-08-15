@@ -1,3 +1,6 @@
+import json
+from urllib.error import URLError
+
 import pytest
 from asgiref.sync import async_to_sync
 from channels.db import database_sync_to_async
@@ -6,11 +9,41 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
+from notifications.ai import draft_message
 from notifications.models import Notification
 from notifications.services import notify_group, notify_users
 from vetapp.asgi import application
 
 User = get_user_model()
+
+
+class _FakeOllamaResponse:
+    """Stands in for the `http.client.HTTPResponse` urlopen() normally returns."""
+
+    def __init__(self, text):
+        self._body = json.dumps({"message": {"role": "assistant", "content": text}}).encode()
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return False
+
+
+def _fake_ollama_urlopen(*, text=None, error=None):
+    """A stand-in for `urllib.request.urlopen` against the local Ollama server, so
+    tests never need it running or make network calls.
+    """
+
+    def urlopen(request, timeout=None):
+        if error is not None:
+            raise error
+        return _FakeOllamaResponse(text)
+
+    return urlopen
 
 
 @pytest.fixture
@@ -240,3 +273,38 @@ def test_consumer_does_not_deliver_to_other_users(in_memory_channel_layer):
         await communicator.disconnect()
 
     async_to_sync(run)()
+
+
+def test_draft_message_returns_none_without_ollama_base_url(settings):
+    settings.OLLAMA_BASE_URL = ""
+
+    assert draft_message("Write a reminder.") is None
+
+
+def test_draft_message_returns_the_generated_text_when_configured(settings, monkeypatch):
+    settings.OLLAMA_BASE_URL = "http://ollama:11434"
+    monkeypatch.setattr(
+        "notifications.ai.urllib_request.urlopen",
+        _fake_ollama_urlopen(text="Booster time, Alex!"),
+    )
+
+    assert draft_message("Write a reminder.") == "Booster time, Alex!"
+
+
+def test_draft_message_returns_none_when_ollama_is_unreachable(settings, monkeypatch):
+    settings.OLLAMA_BASE_URL = "http://ollama:11434"
+    monkeypatch.setattr(
+        "notifications.ai.urllib_request.urlopen",
+        _fake_ollama_urlopen(error=URLError("connection refused")),
+    )
+
+    assert draft_message("Write a reminder.") is None
+
+
+def test_draft_message_returns_none_for_blank_response(settings, monkeypatch):
+    settings.OLLAMA_BASE_URL = "http://ollama:11434"
+    monkeypatch.setattr(
+        "notifications.ai.urllib_request.urlopen", _fake_ollama_urlopen(text="   ")
+    )
+
+    assert draft_message("Write a reminder.") is None
