@@ -263,6 +263,8 @@ def visit_service_to_dataclass(obj: VisitServiceModel) -> VisitService:
         price=obj.price,
         tax_rate=obj.tax_rate,
         notes=obj.notes,
+        vaccine_valid_until=obj.vaccine_valid_until,
+        notification_channel=obj.notification_channel,
         created_at=obj.created_at,
         updated_at=obj.updated_at,
     )
@@ -310,6 +312,8 @@ def visit_to_dataclass(obj: VisitModel) -> Visit:
             price=vs.price,
             tax_rate=vs.tax_rate,
             notes=vs.notes,
+            vaccine_valid_until=vs.vaccine_valid_until,
+            notification_channel=vs.notification_channel,
             created_at=vs.created_at,
             updated_at=vs.updated_at,
         )
@@ -502,6 +506,8 @@ class VisitServiceRepository(Repository[VisitService]):
             price=entity.price,
             tax_rate=entity.tax_rate,
             notes=entity.notes,
+            vaccine_valid_until=entity.vaccine_valid_until,
+            notification_channel=entity.notification_channel,
         )
         return VisitService(
             id=obj.id,
@@ -511,6 +517,8 @@ class VisitServiceRepository(Repository[VisitService]):
             price=obj.price,
             tax_rate=obj.tax_rate,
             notes=obj.notes,
+            vaccine_valid_until=obj.vaccine_valid_until,
+            notification_channel=obj.notification_channel,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )
@@ -523,6 +531,8 @@ class VisitServiceRepository(Repository[VisitService]):
         obj.price = entity.price
         obj.tax_rate = entity.tax_rate
         obj.notes = entity.notes
+        obj.vaccine_valid_until = entity.vaccine_valid_until
+        obj.notification_channel = entity.notification_channel
         obj.save()
         return VisitService(
             id=obj.id,
@@ -532,6 +542,8 @@ class VisitServiceRepository(Repository[VisitService]):
             price=obj.price,
             tax_rate=obj.tax_rate,
             notes=obj.notes,
+            vaccine_valid_until=obj.vaccine_valid_until,
+            notification_channel=obj.notification_channel,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )

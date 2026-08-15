@@ -157,6 +157,8 @@ class VisitService:
     price: Decimal | None = field(default=None)
     tax_rate: Decimal | None = field(default=None)
     notes: str = field(default="")
+    vaccine_valid_until: date | None = field(default=None)
+    notification_channel: str = field(default="")
     created_at: datetime | None = field(default=None)
     updated_at: datetime | None = field(default=None)
 

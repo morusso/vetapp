@@ -17,6 +17,7 @@ class ClientSerializer(serializers.ModelSerializer):
             "city",
             "postal_code",
             "notes",
+            "preferred_notification_channel",
             "created_at",
             "updated_at",
         ]

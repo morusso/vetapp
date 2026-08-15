@@ -143,6 +143,8 @@ class VisitServiceSerializer(serializers.ModelSerializer):
             "price",
             "tax_rate",
             "notes",
+            "vaccine_valid_until",
+            "notification_channel",
             "created_at",
             "updated_at",
         ]
