@@ -162,6 +162,10 @@ class Service(models.Model):
 
 
 class VisitService(models.Model):
+    class NotificationChannel(models.TextChoices):
+        EMAIL = "email", "Email"
+        SMS = "sms", "SMS"
+
     visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name="visit_services")
     service = models.ForeignKey(
         Service, on_delete=models.PROTECT, related_name="visit_services"
@@ -173,6 +177,18 @@ class VisitService(models.Model):
     )
     notes = models.CharField(
         max_length=255, blank=True, validators=[MaxLengthValidator(255)]
+    )
+    vaccine_valid_until = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date the vaccine's protection ends and a booster is due.",
+    )
+    notification_channel = models.CharField(
+        max_length=10,
+        choices=NotificationChannel.choices,
+        blank=True,
+        help_text="How to remind the client before this expires. Falls back to the "
+        "client's preferred channel when blank.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
