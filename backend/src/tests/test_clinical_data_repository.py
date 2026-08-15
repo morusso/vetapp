@@ -505,13 +505,20 @@ class TestVisitServiceRepository:
                 quantity=Decimal("1.00"),
                 price=Decimal("100.00"),
                 tax_rate=Decimal("23.00"),
+                vaccine_valid_until=date(2027, 1, 15),
+                notification_channel="sms",
             )
         )
 
         assert visit_service.id is not None
         assert visit_service.tax_rate == Decimal("23.00")
+        assert visit_service.vaccine_valid_until == date(2027, 1, 15)
+        assert visit_service.notification_channel == "sms"
         assert VisitServiceModel.objects.filter(
-            visit_id=visit_model.id, service_id=service_model.id
+            visit_id=visit_model.id,
+            service_id=service_model.id,
+            vaccine_valid_until=date(2027, 1, 15),
+            notification_channel="sms",
         ).exists()
 
     @pytest.mark.django_db
@@ -544,12 +551,16 @@ class TestVisitServiceRepository:
                 quantity=Decimal("3.00"),
                 tax_rate=Decimal("8.00"),
                 notes="Discounted",
+                vaccine_valid_until=date(2027, 6, 1),
+                notification_channel="email",
             )
         )
 
         assert updated.quantity == Decimal("3.00")
         assert updated.tax_rate == Decimal("8.00")
         assert updated.notes == "Discounted"
+        assert updated.vaccine_valid_until == date(2027, 6, 1)
+        assert updated.notification_channel == "email"
 
     @pytest.mark.django_db
     def test_delete_removes_visit_service(self, visit_model, service_model):

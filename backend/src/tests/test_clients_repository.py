@@ -1,7 +1,7 @@
 import pytest
 
 from clients.models import Client as ClientModel
-from src.models.clients import Client
+from src.models.clients import Client, NotificationChannel
 from src.repositories.clients import ClientRepository
 
 
@@ -40,7 +40,29 @@ def test_add_creates_client(repo):
     assert client.id is not None
     assert client.created_at is not None
     assert client.updated_at is not None
+    assert client.preferred_notification_channel == NotificationChannel.EMAIL
     assert ClientModel.objects.filter(email="anna.nowak@example.com").exists()
+
+
+@pytest.mark.django_db
+def test_add_creates_client_with_sms_preference(repo):
+    client = repo.add(
+        Client(
+            first_name="Anna",
+            last_name="Nowak",
+            email="anna.nowak@example.com",
+            phone_number="987654321",
+            street="Kwiatowa 5",
+            city="Krakow",
+            postal_code="30-001",
+            preferred_notification_channel=NotificationChannel.SMS,
+        )
+    )
+
+    assert client.preferred_notification_channel == NotificationChannel.SMS
+    assert (
+        ClientModel.objects.get(id=client.id).preferred_notification_channel == "sms"
+    )
 
 
 @pytest.mark.django_db
@@ -86,12 +108,15 @@ def test_update_persists_changes(repo, sample_client):
             street=sample_client.street,
             city="Gdansk",
             postal_code=sample_client.postal_code,
+            preferred_notification_channel=NotificationChannel.SMS,
         )
     )
 
     assert updated.city == "Gdansk"
+    assert updated.preferred_notification_channel == NotificationChannel.SMS
     sample_client.refresh_from_db()
     assert sample_client.city == "Gdansk"
+    assert sample_client.preferred_notification_channel == "sms"
 
 
 @pytest.mark.django_db

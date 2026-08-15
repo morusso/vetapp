@@ -566,6 +566,47 @@ def test_visit_service_create(auth_client, visit, service):
     assert VisitService.objects.filter(
         visit=visit, service=service, tax_rate=Decimal("23.00")
     ).exists()
+    created = VisitService.objects.get(visit=visit, service=service)
+    assert created.vaccine_valid_until is None
+    assert created.notification_channel == ""
+
+
+@pytest.mark.django_db
+def test_visit_service_create_with_vaccine_reminder(auth_client, visit, service):
+    response = auth_client.post(
+        "/api/v1/clinical-data/visits/services/",
+        {
+            "visit": visit.pk,
+            "service": service.pk,
+            "quantity": "1.00",
+            "vaccine_valid_until": "2027-01-15",
+            "notification_channel": "sms",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.data["vaccine_valid_until"] == "2027-01-15"
+    assert response.data["notification_channel"] == "sms"
+    visit_service = VisitService.objects.get(visit=visit, service=service)
+    assert visit_service.vaccine_valid_until == date(2027, 1, 15)
+    assert visit_service.notification_channel == "sms"
+
+
+@pytest.mark.django_db
+def test_visit_service_create_rejects_invalid_notification_channel(
+    auth_client, visit, service
+):
+    response = auth_client.post(
+        "/api/v1/clinical-data/visits/services/",
+        {
+            "visit": visit.pk,
+            "service": service.pk,
+            "quantity": "1.00",
+            "notification_channel": "carrier_pigeon",
+        },
+    )
+
+    assert response.status_code == 400
 
 
 @pytest.mark.django_db
@@ -604,6 +645,24 @@ def test_visit_service_update(auth_client, visit, service):
     assert response.status_code == 200
     visit_service.refresh_from_db()
     assert visit_service.quantity == Decimal("4.00")
+
+
+@pytest.mark.django_db
+def test_visit_service_update_vaccine_reminder(auth_client, visit, service):
+    visit_service = VisitService.objects.create(
+        visit=visit, service=service, quantity=Decimal("1.00")
+    )
+
+    response = auth_client.patch(
+        f"/api/v1/clinical-data/visits/services/{visit_service.pk}/",
+        {"vaccine_valid_until": "2027-06-01", "notification_channel": "email"},
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    visit_service.refresh_from_db()
+    assert visit_service.vaccine_valid_until == date(2027, 6, 1)
+    assert visit_service.notification_channel == "email"
 
 
 @pytest.mark.django_db
