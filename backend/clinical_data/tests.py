@@ -1,9 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core import mail
+from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from animals.models import Animal, AnimalType, Patient
@@ -17,7 +19,11 @@ from clinical_data.models import (
     VisitNote,
     VisitService,
 )
-from clinical_data.tasks import check_medicine_stock_levels
+from clinical_data.tasks import (
+    VACCINE_REMINDER_LEAD_DAYS,
+    check_medicine_stock_levels,
+    check_vaccine_expirations,
+)
 from notifications.models import Notification
 
 User = get_user_model()
@@ -781,3 +787,88 @@ def test_check_medicine_stock_levels_only_notifies_admin_group_members(
     check_medicine_stock_levels()
 
     assert not Notification.objects.filter(recipient=outsider).exists()
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_emails_client_by_default(visit, service):
+    reminder_date = timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS)
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=reminder_date,
+    )
+
+    check_vaccine_expirations()
+
+    assert len(mail.outbox) == 1
+    sent = mail.outbox[0]
+    assert sent.to == [visit.patient.owner.email]
+    assert visit.patient.name in sent.subject
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_uses_client_preferred_channel(visit, service):
+    visit.patient.owner.preferred_notification_channel = Client.NotificationChannel.SMS
+    visit.patient.owner.save()
+    reminder_date = timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS)
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=reminder_date,
+    )
+
+    check_vaccine_expirations()
+
+    assert mail.outbox == []
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_service_channel_overrides_client_default(
+    visit, service
+):
+    assert visit.patient.owner.preferred_notification_channel == "email"
+    reminder_date = timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS)
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=reminder_date,
+        notification_channel=VisitService.NotificationChannel.SMS,
+    )
+
+    check_vaccine_expirations()
+
+    assert mail.outbox == []
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_ignores_dates_outside_the_reminder_window(
+    visit, service
+):
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=timezone.now().date(),
+    )
+    VisitService.objects.create(
+        visit=visit,
+        service=service,
+        quantity=Decimal("1.00"),
+        vaccine_valid_until=timezone.now().date() + timedelta(days=VACCINE_REMINDER_LEAD_DAYS + 1),
+    )
+
+    check_vaccine_expirations()
+
+    assert mail.outbox == []
+
+
+@pytest.mark.django_db
+def test_check_vaccine_expirations_ignores_services_without_vaccine_date(visit, service):
+    VisitService.objects.create(visit=visit, service=service, quantity=Decimal("1.00"))
+
+    check_vaccine_expirations()
+
+    assert mail.outbox == []
