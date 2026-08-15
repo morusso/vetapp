@@ -8,6 +8,7 @@ import { EditIcon } from "@/components/icons";
 import RichTextViewer from "@/components/RichTextViewer";
 import VisitNotes from "../VisitNotes";
 import PrescribedMedicines from "../PrescribedMedicines";
+import VisitServices from "../VisitServices";
 
 export default function VisitDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -83,6 +84,7 @@ export default function VisitDetailPage() {
 
       <VisitNotes visitId={visit.id} />
       <PrescribedMedicines visitId={visit.id} />
+      <VisitServices visitId={visit.id} />
     </main>
   );
 }

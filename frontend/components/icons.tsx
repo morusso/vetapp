@@ -98,6 +98,16 @@ export function StockBatchesIcon(props: IconProps) {
   );
 }
 
+export function ServicesIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M14.5 3.5 20.5 9.5 9.5 20.5 3.5 14.5Z" />
+      <path d="M14.5 3.5 3.5 14.5" />
+      <circle cx="16.5" cy="7.5" r="1" />
+    </Icon>
+  );
+}
+
 export function UsersIcon(props: IconProps) {
   return (
     <Icon {...props}>
