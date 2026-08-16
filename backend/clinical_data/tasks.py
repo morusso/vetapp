@@ -2,13 +2,12 @@ import logging
 from datetime import timedelta
 
 from celery import shared_task
-from django.core.mail import send_mail
 from django.db.models import Q, Sum
 from django.utils import timezone
 
 from clinical_data.models import Medicine, VisitService
-from notifications.ai import draft_message
 from notifications.services import notify_group
+from src.services.reminder_channels import get_reminder_channel
 
 logger = logging.getLogger(__name__)
 
@@ -72,44 +71,9 @@ def check_vaccine_expirations():
 
 
 def _send_vaccine_reminder(visit_service, client, channel):
-    patient_name = visit_service.visit.patient.name
-    service_name = visit_service.service.name
-    valid_until = visit_service.vaccine_valid_until
-
-    if channel == VisitService.NotificationChannel.SMS:
-        # No SMS provider is wired up yet - log what would have been sent instead.
-        logger.info(
-            "SMS vaccine reminder to %s (%s): %s's %s expires on %s.",
-            client,
-            client.phone_number,
-            patient_name,
-            service_name,
-            valid_until,
-        )
-        return
-
-    send_mail(
-        subject=f"{patient_name}'s vaccination is expiring soon",
-        message=_vaccine_reminder_body(patient_name, service_name, valid_until, client),
-        from_email=None,
-        recipient_list=[client.email],
+    get_reminder_channel(channel).send(
+        client=client,
+        patient_name=visit_service.visit.patient.name,
+        service_name=visit_service.service.name,
+        valid_until=visit_service.vaccine_valid_until,
     )
-
-
-def _vaccine_reminder_body(patient_name, service_name, valid_until, client):
-    fallback = (
-        f"Hi {client.first_name},\n\n"
-        f"{patient_name}'s {service_name} protection ends on {valid_until}. "
-        "Please book a booster appointment before then.\n\nVetApp"
-    )
-
-    prompt = (
-        f"Write a short, warm email reminding {client.first_name}, a vet clinic client, "
-        f"that their pet {patient_name}'s {service_name} protection ends on {valid_until} "
-        "and they should book a booster appointment before then. "
-        "Keep it under 80 words, plain text, sign off as VetApp. "
-        "Reply with only the email body, no subject line."
-    )
-    return draft_message(
-        prompt, system="You draft brief, friendly reminder emails for a veterinary clinic."
-    ) or fallback
