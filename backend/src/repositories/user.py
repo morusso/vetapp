@@ -2,7 +2,7 @@ from user.models import Specialization as SpecializationModel
 from user.models import User as UserModel
 
 from src.models.user import Specialization, User
-from src.repositories.base import Repository
+from src.repositories.base import DjangoRepository
 
 
 def specialization_to_dataclass(obj: SpecializationModel) -> Specialization:
@@ -31,57 +31,22 @@ def user_to_dataclass(obj: UserModel) -> User:
     )
 
 
-class SpecializationRepository(Repository[Specialization]):
-    def get(self, id: int) -> Specialization | None:
-        try:
-            return specialization_to_dataclass(SpecializationModel.objects.get(id=id))
-        except SpecializationModel.DoesNotExist:
-            return None
-
-    def list(self) -> list[Specialization]:
-        return [
-            specialization_to_dataclass(obj)
-            for obj in SpecializationModel.objects.all()
-        ]
-
-    def add(self, entity: Specialization) -> Specialization:
-        obj = SpecializationModel.objects.create(name=entity.name)
-        return specialization_to_dataclass(obj)
-
-    def update(self, entity: Specialization) -> Specialization:
-        obj = SpecializationModel.objects.get(id=entity.id)
-        obj.name = entity.name
-        obj.save()
-        return specialization_to_dataclass(obj)
-
-    def delete(self, id: int) -> None:
-        SpecializationModel.objects.filter(id=id).delete()
+class SpecializationRepository(DjangoRepository[Specialization]):
+    model = SpecializationModel
+    to_dataclass = staticmethod(specialization_to_dataclass)
 
 
-class UserRepository(Repository[User]):
-    def get(self, id: int) -> User | None:
-        try:
-            obj = UserModel.objects.prefetch_related("specializations").get(id=id)
-        except UserModel.DoesNotExist:
-            return None
-        return user_to_dataclass(obj)
-
-    def list(self) -> list[User]:
-        return [
-            user_to_dataclass(obj)
-            for obj in UserModel.objects.prefetch_related("specializations").all()
-        ]
+class UserRepository(DjangoRepository[User]):
+    model = UserModel
+    prefetch_related = ("specializations",)
+    exclude_from_write = frozenset(
+        {"id", "created_at", "updated_at", "date_joined", "password"}
+    )
+    to_dataclass = staticmethod(user_to_dataclass)
 
     def add(self, entity: User) -> User:
         obj = UserModel.objects.create_user(
-            email=entity.email,
-            password=entity.password,
-            first_name=entity.first_name,
-            last_name=entity.last_name,
-            phone_number=entity.phone_number,
-            is_staff=entity.is_staff,
-            is_active=entity.is_active,
-            is_superuser=entity.is_superuser,
+            password=entity.password, **self._write_fields(entity)
         )
         if entity.specializations:
             obj.specializations.set(s.id for s in entity.specializations)
@@ -89,16 +54,8 @@ class UserRepository(Repository[User]):
 
     def update(self, entity: User) -> User:
         obj = UserModel.objects.get(id=entity.id)
-        obj.email = entity.email
-        obj.first_name = entity.first_name
-        obj.last_name = entity.last_name
-        obj.phone_number = entity.phone_number
-        obj.is_staff = entity.is_staff
-        obj.is_active = entity.is_active
-        obj.is_superuser = entity.is_superuser
+        for key, value in self._write_fields(entity).items():
+            setattr(obj, key, value)
         obj.save()
         obj.specializations.set(s.id for s in entity.specializations)
         return user_to_dataclass(obj)
-
-    def delete(self, id: int) -> None:
-        UserModel.objects.filter(id=id).delete()

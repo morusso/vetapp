@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/animals";
 import RichTextEditor from "@/components/RichTextEditor";
+import { useForm } from "@/lib/hooks/useForm";
 
 export type AnimalTypeFormValues = { name: string; description: string };
 
@@ -17,26 +16,10 @@ export default function AnimalTypeForm({
   title: string;
   onSubmit: (values: AnimalTypeFormValues) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit(values);
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const { values, setValues, fieldErrors, isSubmitting, handleSubmit } = useForm({
+    initialValues,
+    onSubmit,
+  });
 
   return (
     <form

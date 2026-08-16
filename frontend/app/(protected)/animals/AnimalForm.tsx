@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { ApiError, listAllAnimalTypes, type AnimalType } from "@/lib/animals";
+import { useEffect, useState } from "react";
+import { listAllAnimalTypes, type AnimalType } from "@/lib/animals";
+import { useForm } from "@/lib/hooks/useForm";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export type AnimalFormValues = { name: string; animal_type: string; description: string };
 
@@ -17,33 +19,18 @@ export default function AnimalForm({
   title: string;
   onSubmit: (values: { name: string; animal_type: number; description: string }) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [animalTypes, setAnimalTypes] = useState<AnimalType[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit } = useForm({
+    initialValues,
+    onSubmit,
+    prepareSubmit: (v) => ({ ...v, animal_type: Number(v.animal_type) }),
+  });
 
   useEffect(() => {
     listAllAnimalTypes()
       .then(setAnimalTypes)
       .catch(() => setFieldErrors({ detail: ["Could not load animal types."] }));
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({ ...values, animal_type: Number(values.animal_type) });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
@@ -80,22 +67,18 @@ export default function AnimalForm({
           <label htmlFor="animal_type" className="text-xs font-semibold text-ink-muted">
             Animal type *
           </label>
-          <select
+          <SearchableSelect
             id="animal_type"
             required
             value={values.animal_type}
-            onChange={(e) => setValues({ ...values, animal_type: e.target.value })}
+            onChange={(v) => setValues({ ...values, animal_type: v })}
+            placeholder="Select an animal type"
             className={inputClass}
-          >
-            <option value="" disabled>
-              Select an animal type
-            </option>
-            {animalTypes.map((animalType) => (
-              <option key={animalType.id} value={animalType.id}>
-                {animalType.name}
-              </option>
-            ))}
-          </select>
+            options={animalTypes.map((animalType) => ({
+              value: String(animalType.id),
+              label: animalType.name,
+            }))}
+          />
           {fieldErrors.animal_type?.map((msg) => (
             <p key={msg} className="text-xs text-danger">
               {msg}

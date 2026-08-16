@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api";
+import { useEffect, useState } from "react";
 import { listAllAnimals, type Animal } from "@/lib/animals";
 import { listAllClients, type Client } from "@/lib/clients";
+import { useForm } from "@/lib/hooks/useForm";
 import type { PatientInput, Sex } from "@/lib/patients";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
+
+const SEX_OPTIONS: { value: Sex; label: string }[] = [
+  { value: "unknown", label: "Unknown" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
 
 export type PatientFormValues = {
   name: string;
@@ -32,11 +39,26 @@ export default function PatientForm({
   title: string;
   onSubmit: (values: PatientInput) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [clients, setClients] = useState<Client[]>([]);
   const [breeds, setBreeds] = useState<Animal[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit, errors } =
+    useForm({
+      initialValues,
+      onSubmit,
+      prepareSubmit: (v) => ({
+        name: v.name,
+        owner: Number(v.owner),
+        breed: Number(v.breed),
+        sex: v.sex,
+        birth_date: v.birth_date || null,
+        color: v.color,
+        microchip_number: v.microchip_number || null,
+        note: v.note || null,
+        is_sterilized: v.is_sterilized,
+        is_deceased: v.is_deceased,
+        date_of_death: v.date_of_death || null,
+      }),
+    });
 
   useEffect(() => {
     listAllClients()
@@ -45,47 +67,10 @@ export default function PatientForm({
     listAllAnimals()
       .then(setBreeds)
       .catch(() => setFieldErrors((prev) => ({ ...prev, detail: ["Could not load breeds."] })));
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        name: values.name,
-        owner: Number(values.owner),
-        breed: Number(values.breed),
-        sex: values.sex,
-        birth_date: values.birth_date || null,
-        color: values.color,
-        microchip_number: values.microchip_number || null,
-        note: values.note || null,
-        is_sterilized: values.is_sterilized,
-        is_deceased: values.is_deceased,
-        date_of_death: values.date_of_death || null,
-      });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
-  function errors(id: string) {
-    return fieldErrors[id]?.map((msg) => (
-      <p key={msg} className="text-xs text-danger">
-        {msg}
-      </p>
-    ));
-  }
 
   return (
     <form
@@ -121,22 +106,18 @@ export default function PatientForm({
               <label htmlFor="owner" className="text-xs font-semibold text-ink-muted">
                 Owner *
               </label>
-              <select
+              <SearchableSelect
                 id="owner"
                 required
                 value={values.owner}
-                onChange={(e) => setValues({ ...values, owner: e.target.value })}
+                onChange={(v) => setValues({ ...values, owner: v })}
+                placeholder="Select an owner"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select an owner
-                </option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.first_name} {c.last_name}
-                  </option>
-                ))}
-              </select>
+                options={clients.map((c) => ({
+                  value: String(c.id),
+                  label: `${c.first_name} ${c.last_name}`,
+                }))}
+              />
               {errors("owner")}
             </div>
 
@@ -144,22 +125,18 @@ export default function PatientForm({
               <label htmlFor="breed" className="text-xs font-semibold text-ink-muted">
                 Breed *
               </label>
-              <select
+              <SearchableSelect
                 id="breed"
                 required
                 value={values.breed}
-                onChange={(e) => setValues({ ...values, breed: e.target.value })}
+                onChange={(v) => setValues({ ...values, breed: v })}
+                placeholder="Select a breed"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select a breed
-                </option>
-                {breeds.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} ({b.animal_type_name})
-                  </option>
-                ))}
-              </select>
+                options={breeds.map((b) => ({
+                  value: String(b.id),
+                  label: `${b.name} (${b.animal_type_name})`,
+                }))}
+              />
               {errors("breed")}
             </div>
           </div>
@@ -169,16 +146,13 @@ export default function PatientForm({
               <label htmlFor="sex" className="text-xs font-semibold text-ink-muted">
                 Sex
               </label>
-              <select
+              <SearchableSelect
                 id="sex"
                 value={values.sex}
-                onChange={(e) => setValues({ ...values, sex: e.target.value as Sex })}
+                onChange={(v) => setValues({ ...values, sex: v as Sex })}
                 className={inputClass}
-              >
-                <option value="unknown">Unknown</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+                options={SEX_OPTIONS}
+              />
             </div>
 
             <div className="flex flex-col gap-1">

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api";
+import { useForm } from "@/lib/hooks/useForm";
 import type { ServiceInput } from "@/lib/services";
 import RichTextEditor from "@/components/RichTextEditor";
 
@@ -25,44 +24,21 @@ export default function ServiceForm({
   title: string;
   onSubmit: (values: ServiceInput) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        name: values.name,
-        description: values.description,
-        price: values.price,
-        tax_rate: values.tax_rate || null,
-        duration_minutes: values.duration_minutes ? Number(values.duration_minutes) : null,
-        is_active: values.is_active,
-      });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const { values, setValues, fieldErrors, isSubmitting, handleSubmit, errors } = useForm({
+    initialValues,
+    onSubmit,
+    prepareSubmit: (v) => ({
+      name: v.name,
+      description: v.description,
+      price: v.price,
+      tax_rate: v.tax_rate || null,
+      duration_minutes: v.duration_minutes ? Number(v.duration_minutes) : null,
+      is_active: v.is_active,
+    }),
+  });
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
-  function errors(id: string) {
-    return fieldErrors[id]?.map((msg) => (
-      <p key={msg} className="text-xs text-danger">
-        {msg}
-      </p>
-    ));
-  }
 
   return (
     <form

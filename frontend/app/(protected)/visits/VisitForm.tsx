@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { useForm } from "@/lib/hooks/useForm";
 import { listAllPatients, type Patient } from "@/lib/patients";
 import { listAllUsers, type User } from "@/lib/users";
 import type { VisitInput } from "@/lib/visits";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export type VisitFormValues = {
   patient: string;
@@ -36,11 +37,19 @@ export default function VisitForm({
   title: string;
   onSubmit: (values: VisitInput) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [veterinarians, setVeterinarians] = useState<User[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit, errors } =
+    useForm({
+      initialValues,
+      onSubmit,
+      prepareSubmit: (v) => ({
+        patient: Number(v.patient),
+        veterinarian: Number(v.veterinarian),
+        visit_date: new Date(v.visit_date).toISOString(),
+        diagnosis: v.diagnosis,
+      }),
+    });
 
   useEffect(() => {
     listAllPatients()
@@ -51,40 +60,10 @@ export default function VisitForm({
       .catch(() =>
         setFieldErrors((prev) => ({ ...prev, detail: ["Could not load veterinarians."] }))
       );
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        patient: Number(values.patient),
-        veterinarian: Number(values.veterinarian),
-        visit_date: new Date(values.visit_date).toISOString(),
-        diagnosis: values.diagnosis,
-      });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
-  function errors(id: string) {
-    return fieldErrors[id]?.map((msg) => (
-      <p key={msg} className="text-xs text-danger">
-        {msg}
-      </p>
-    ));
-  }
 
   return (
     <form
@@ -106,22 +85,18 @@ export default function VisitForm({
               <label htmlFor="patient" className="text-xs font-semibold text-ink-muted">
                 Patient *
               </label>
-              <select
+              <SearchableSelect
                 id="patient"
                 required
                 value={values.patient}
-                onChange={(e) => setValues({ ...values, patient: e.target.value })}
+                onChange={(v) => setValues({ ...values, patient: v })}
+                placeholder="Select a patient"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select a patient
-                </option>
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.owner_name})
-                  </option>
-                ))}
-              </select>
+                options={patients.map((p) => ({
+                  value: String(p.id),
+                  label: `${p.name} (${p.owner_name})`,
+                }))}
+              />
               {errors("patient")}
             </div>
 
@@ -129,22 +104,18 @@ export default function VisitForm({
               <label htmlFor="veterinarian" className="text-xs font-semibold text-ink-muted">
                 Veterinarian *
               </label>
-              <select
+              <SearchableSelect
                 id="veterinarian"
                 required
                 value={values.veterinarian}
-                onChange={(e) => setValues({ ...values, veterinarian: e.target.value })}
+                onChange={(v) => setValues({ ...values, veterinarian: v })}
+                placeholder="Select a veterinarian"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select a veterinarian
-                </option>
-                {veterinarians.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {userLabel(u)}
-                  </option>
-                ))}
-              </select>
+                options={veterinarians.map((u) => ({
+                  value: String(u.id),
+                  label: userLabel(u),
+                }))}
+              />
               {errors("veterinarian")}
             </div>
           </div>

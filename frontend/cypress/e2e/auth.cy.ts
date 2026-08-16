@@ -5,7 +5,7 @@ describe("Authentication", () => {
     cy.get("#password").type(Cypress.env("e2eUserPassword"));
     cy.contains("button", "Log in").click();
 
-    cy.url().should("eq", `${Cypress.config("baseUrl")}/`);
+    cy.url().should("eq", `${Cypress.config("baseUrl")}/dashboard`);
     cy.contains("Log out").click();
     cy.contains("a", "Log in").should("be.visible");
 
