@@ -23,6 +23,9 @@ class Command(BaseCommand):
         user, created = User.objects.get_or_create(email=email)
         user.set_password(password)
         user.is_active = True
+        # Staff access lets the e2e suite exercise admin-gated screens too
+        # (user management, the veterinarian picker on visits).
+        user.is_staff = True
         user.save()
 
         action = "Created" if created else "Reset password for"
