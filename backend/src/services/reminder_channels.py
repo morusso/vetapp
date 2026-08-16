@@ -12,7 +12,7 @@ from datetime import date
 
 from django.core.mail import send_mail
 
-from notifications.ai import draft_message
+from notifications.ai import MessageDrafter, get_drafter
 from src.models.clients import Client, NotificationChannel
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,15 @@ class ReminderChannel(ABC):
 
 
 class EmailReminderChannel(ReminderChannel):
-    """Sends the reminder as an email, drafted by AI when available."""
+    """Sends the reminder as an email, drafted by AI when available.
+
+    The :class:`~notifications.ai.MessageDrafter` is resolved lazily via
+    :func:`~notifications.ai.get_drafter` unless one is injected, so tests can
+    pass a stub drafter instead of mocking urllib.
+    """
+
+    def __init__(self, drafter: MessageDrafter | None = None):
+        self._drafter = drafter
 
     def send(
         self, *, client: Client, patient_name: str, service_name: str, valid_until: date
@@ -57,8 +65,7 @@ class EmailReminderChannel(ReminderChannel):
             recipient_list=[client.email],
         )
 
-    @staticmethod
-    def _body(patient_name: str, service_name: str, valid_until: date, client: Client) -> str:
+    def _body(self, patient_name: str, service_name: str, valid_until: date, client: Client) -> str:
         """Build the email body, preferring an AI-drafted message over the fallback.
 
         Args:
@@ -68,7 +75,7 @@ class EmailReminderChannel(ReminderChannel):
             client: The owner the message is addressed to.
 
         Returns:
-            The AI-drafted message when Ollama is configured and reachable,
+            The AI-drafted message when a provider is configured and reachable,
             otherwise a static fallback template.
         """
         fallback = (
@@ -84,7 +91,8 @@ class EmailReminderChannel(ReminderChannel):
             "Keep it under 80 words, plain text, sign off as VetApp. "
             "Reply with only the email body, no subject line."
         )
-        return draft_message(
+        drafter = self._drafter if self._drafter is not None else get_drafter()
+        return drafter.draft(
             prompt, system="You draft brief, friendly reminder emails for a veterinary clinic."
         ) or fallback
 
