@@ -2,7 +2,7 @@ import os
 
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vetapp.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vetapp.settings.dev')
 
 app = Celery('vetapp')
 app.config_from_object('django.conf:settings', namespace='CELERY')

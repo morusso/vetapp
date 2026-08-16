@@ -8,3 +8,7 @@ __pycache__/
 .venv/
 venv/
 docker-compose-dev.yml
+node_modules/
+.next/
+pgdata/
+deployment/secrets/
