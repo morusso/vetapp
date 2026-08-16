@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
-import { request, type Paginated } from "./api";
+import { request } from "./api";
+import { createCrudResource } from "./crud";
 import type { Patient } from "./patients";
 
 export type NotificationChannel = "email" | "sms";
@@ -33,45 +34,17 @@ export type ClientInput = {
 
 const CLIENTS_URL = `${API_V1_URL}/clients/`;
 
-export function listClients(url: string = CLIENTS_URL) {
-  return request<Paginated<Client>>(url);
-}
+const clients = createCrudResource<Client, ClientInput>(CLIENTS_URL);
 
-export async function listAllClients(): Promise<Client[]> {
-  const all: Client[] = [];
-  let url: string | undefined = CLIENTS_URL;
-  while (url) {
-    const page = await listClients(url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
-}
-
-export function getClient(id: number) {
-  return request<Client>(`${CLIENTS_URL}${id}/`);
-}
+export const listClients = clients.list;
+export const listAllClients = clients.listAll;
+export const getClient = clients.get;
+export const createClient = clients.create;
+export const updateClient = clients.update;
+export const deleteClient = clients.remove;
 
 export type ClientWithPatients = Client & { patients: Patient[] };
 
 export function getClientFull(id: number) {
   return request<ClientWithPatients>(`${CLIENTS_URL}${id}/full/`);
-}
-
-export function createClient(data: ClientInput) {
-  return request<Client>(CLIENTS_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updateClient(id: number, data: ClientInput) {
-  return request<Client>(`${CLIENTS_URL}${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteClient(id: number) {
-  return request<void>(`${CLIENTS_URL}${id}/`, { method: "DELETE" });
 }

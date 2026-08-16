@@ -1,5 +1,5 @@
 import { API_V1_URL } from "./auth";
-import { request, type Paginated } from "./api";
+import { createCrudResource } from "./crud";
 
 export type DosageForm =
   | "tablet"
@@ -74,54 +74,18 @@ export type MedicineBatchInput = {
 const MEDICINES_URL = `${API_V1_URL}/clinical-data/medicines/`;
 const MEDICINE_BATCHES_URL = `${API_V1_URL}/clinical-data/medicines/batches/`;
 
-export function listMedicines(url: string = MEDICINES_URL) {
-  return request<Paginated<Medicine>>(url);
-}
+const medicines = createCrudResource<Medicine, MedicineInput>(MEDICINES_URL);
+const medicineBatches = createCrudResource<MedicineBatch, MedicineBatchInput>(
+  MEDICINE_BATCHES_URL
+);
 
-export async function listAllMedicines(): Promise<Medicine[]> {
-  const all: Medicine[] = [];
-  let url: string | undefined = MEDICINES_URL;
-  while (url) {
-    const page = await listMedicines(url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
-}
+export const listMedicines = medicines.list;
+export const listAllMedicines = medicines.listAll;
+export const getMedicine = medicines.get;
+export const createMedicine = medicines.create;
+export const updateMedicine = medicines.update;
+export const deleteMedicine = medicines.remove;
 
-export function getMedicine(id: number) {
-  return request<Medicine>(`${MEDICINES_URL}${id}/`);
-}
-
-export function createMedicine(data: MedicineInput) {
-  return request<Medicine>(MEDICINES_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updateMedicine(id: number, data: MedicineInput) {
-  return request<Medicine>(`${MEDICINES_URL}${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteMedicine(id: number) {
-  return request<void>(`${MEDICINES_URL}${id}/`, { method: "DELETE" });
-}
-
-export function listMedicineBatches(url: string = MEDICINE_BATCHES_URL) {
-  return request<Paginated<MedicineBatch>>(url);
-}
-
-export function createMedicineBatch(data: MedicineBatchInput) {
-  return request<MedicineBatch>(MEDICINE_BATCHES_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteMedicineBatch(id: number) {
-  return request<void>(`${MEDICINE_BATCHES_URL}${id}/`, { method: "DELETE" });
-}
+export const listMedicineBatches = medicineBatches.list;
+export const createMedicineBatch = medicineBatches.create;
+export const deleteMedicineBatch = medicineBatches.remove;

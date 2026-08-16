@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
-import { request, type Paginated } from "./api";
+import { request } from "./api";
+import { createCrudResource } from "./crud";
 import type { NotificationChannel } from "./clients";
 
 export type Visit = {
@@ -91,116 +92,54 @@ const VISIT_NOTES_URL = `${API_V1_URL}/clinical-data/visits/notes/`;
 const PRESCRIBED_MEDICINES_URL = `${API_V1_URL}/clinical-data/visits/medicines/`;
 const VISIT_SERVICES_URL = `${API_V1_URL}/clinical-data/visits/services/`;
 
-export function listVisits(url: string = VISITS_URL) {
-  return request<Paginated<Visit>>(url);
-}
+const visits = createCrudResource<Visit, VisitInput>(VISITS_URL);
+const visitNotes = createCrudResource<VisitNote, VisitNoteInput>(VISIT_NOTES_URL);
+const prescribedMedicines = createCrudResource<PrescribedMedicine, PrescribedMedicineInput>(
+  PRESCRIBED_MEDICINES_URL
+);
+const visitServices = createCrudResource<VisitService, VisitServiceInput>(
+  VISIT_SERVICES_URL
+);
 
-export function getVisit(id: number) {
-  return request<Visit>(`${VISITS_URL}${id}/`);
-}
+export const listVisits = visits.list;
+export const getVisit = visits.get;
+export const createVisit = visits.create;
+export const updateVisit = visits.update;
+export const deleteVisit = visits.remove;
 
 export function getVisitFull(id: number) {
   return request<VisitWithDetails>(`${VISITS_URL}${id}/full/`);
 }
 
-export function createVisit(data: VisitInput) {
-  return request<Visit>(VISITS_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updateVisit(id: number, data: VisitInput) {
-  return request<Visit>(`${VISITS_URL}${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteVisit(id: number) {
-  return request<void>(`${VISITS_URL}${id}/`, { method: "DELETE" });
-}
-
 export function listVisitNotes(visitId: number, url?: string) {
-  return request<Paginated<VisitNote>>(url ?? `${VISIT_NOTES_URL}?visit=${visitId}`);
+  return visitNotes.list(url ?? `${VISIT_NOTES_URL}?visit=${visitId}`);
 }
 
-export async function listAllVisitNotes(visitId: number): Promise<VisitNote[]> {
-  const all: VisitNote[] = [];
-  let url: string | undefined = `${VISIT_NOTES_URL}?visit=${visitId}`;
-  while (url) {
-    const page = await listVisitNotes(visitId, url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
+export function listAllVisitNotes(visitId: number): Promise<VisitNote[]> {
+  return visitNotes.listAll(`${VISIT_NOTES_URL}?visit=${visitId}`);
 }
 
-export function createVisitNote(data: VisitNoteInput) {
-  return request<VisitNote>(VISIT_NOTES_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteVisitNote(id: number) {
-  return request<void>(`${VISIT_NOTES_URL}${id}/`, { method: "DELETE" });
-}
+export const createVisitNote = visitNotes.create;
+export const deleteVisitNote = visitNotes.remove;
 
 export function listPrescribedMedicines(visitId: number, url?: string) {
-  return request<Paginated<PrescribedMedicine>>(
-    url ?? `${PRESCRIBED_MEDICINES_URL}?visit=${visitId}`
-  );
+  return prescribedMedicines.list(url ?? `${PRESCRIBED_MEDICINES_URL}?visit=${visitId}`);
 }
 
-export async function listAllPrescribedMedicines(
-  visitId: number
-): Promise<PrescribedMedicine[]> {
-  const all: PrescribedMedicine[] = [];
-  let url: string | undefined = `${PRESCRIBED_MEDICINES_URL}?visit=${visitId}`;
-  while (url) {
-    const page = await listPrescribedMedicines(visitId, url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
+export function listAllPrescribedMedicines(visitId: number): Promise<PrescribedMedicine[]> {
+  return prescribedMedicines.listAll(`${PRESCRIBED_MEDICINES_URL}?visit=${visitId}`);
 }
 
-export function createPrescribedMedicine(data: PrescribedMedicineInput) {
-  return request<PrescribedMedicine>(PRESCRIBED_MEDICINES_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deletePrescribedMedicine(id: number) {
-  return request<void>(`${PRESCRIBED_MEDICINES_URL}${id}/`, { method: "DELETE" });
-}
+export const createPrescribedMedicine = prescribedMedicines.create;
+export const deletePrescribedMedicine = prescribedMedicines.remove;
 
 export function listVisitServices(visitId: number, url?: string) {
-  return request<Paginated<VisitService>>(
-    url ?? `${VISIT_SERVICES_URL}?visit=${visitId}`
-  );
+  return visitServices.list(url ?? `${VISIT_SERVICES_URL}?visit=${visitId}`);
 }
 
-export async function listAllVisitServices(visitId: number): Promise<VisitService[]> {
-  const all: VisitService[] = [];
-  let url: string | undefined = `${VISIT_SERVICES_URL}?visit=${visitId}`;
-  while (url) {
-    const page = await listVisitServices(visitId, url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
+export function listAllVisitServices(visitId: number): Promise<VisitService[]> {
+  return visitServices.listAll(`${VISIT_SERVICES_URL}?visit=${visitId}`);
 }
 
-export function createVisitService(data: VisitServiceInput) {
-  return request<VisitService>(VISIT_SERVICES_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteVisitService(id: number) {
-  return request<void>(`${VISIT_SERVICES_URL}${id}/`, { method: "DELETE" });
-}
+export const createVisitService = visitServices.create;
+export const deleteVisitService = visitServices.remove;

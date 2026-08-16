@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
-import { request, type Paginated } from "./api";
+import { request } from "./api";
+import { createCrudResource } from "./crud";
 import type { VisitWithDetails } from "./visits";
 
 export type Sex = "male" | "female" | "unknown";
@@ -54,24 +55,17 @@ export type PatientWeightInput = {
 const PATIENTS_URL = `${API_V1_URL}/animals/patients/`;
 const PATIENT_WEIGHTS_URL = `${API_V1_URL}/animals/patients/weights/`;
 
-export function listPatients(url: string = PATIENTS_URL) {
-  return request<Paginated<Patient>>(url);
-}
+const patients = createCrudResource<Patient, PatientInput>(PATIENTS_URL);
+const patientWeights = createCrudResource<PatientWeight, PatientWeightInput>(
+  PATIENT_WEIGHTS_URL
+);
 
-export async function listAllPatients(): Promise<Patient[]> {
-  const all: Patient[] = [];
-  let url: string | undefined = PATIENTS_URL;
-  while (url) {
-    const page = await listPatients(url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
-}
-
-export function getPatient(id: number) {
-  return request<Patient>(`${PATIENTS_URL}${id}/`);
-}
+export const listPatients = patients.list;
+export const listAllPatients = patients.listAll;
+export const getPatient = patients.get;
+export const createPatient = patients.create;
+export const updatePatient = patients.update;
+export const deletePatient = patients.remove;
 
 export type PatientWithWeights = Patient & {
   weight_records: PatientWeight[];
@@ -82,48 +76,13 @@ export function getPatientFull(id: number) {
   return request<PatientWithWeights>(`${PATIENTS_URL}${id}/full/`);
 }
 
-export function createPatient(data: PatientInput) {
-  return request<Patient>(PATIENTS_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updatePatient(id: number, data: PatientInput) {
-  return request<Patient>(`${PATIENTS_URL}${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deletePatient(id: number) {
-  return request<void>(`${PATIENTS_URL}${id}/`, { method: "DELETE" });
-}
-
 export function listPatientWeights(patientId: number, url?: string) {
-  return request<Paginated<PatientWeight>>(
-    url ?? `${PATIENT_WEIGHTS_URL}?patient=${patientId}`
-  );
+  return patientWeights.list(url ?? `${PATIENT_WEIGHTS_URL}?patient=${patientId}`);
 }
 
-export async function listAllPatientWeights(patientId: number): Promise<PatientWeight[]> {
-  const all: PatientWeight[] = [];
-  let url: string | undefined = `${PATIENT_WEIGHTS_URL}?patient=${patientId}`;
-  while (url) {
-    const page = await listPatientWeights(patientId, url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
+export function listAllPatientWeights(patientId: number): Promise<PatientWeight[]> {
+  return patientWeights.listAll(`${PATIENT_WEIGHTS_URL}?patient=${patientId}`);
 }
 
-export function createPatientWeight(data: PatientWeightInput) {
-  return request<PatientWeight>(PATIENT_WEIGHTS_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deletePatientWeight(id: number) {
-  return request<void>(`${PATIENT_WEIGHTS_URL}${id}/`, { method: "DELETE" });
-}
+export const createPatientWeight = patientWeights.create;
+export const deletePatientWeight = patientWeights.remove;

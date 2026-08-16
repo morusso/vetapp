@@ -1,5 +1,6 @@
 import { API_V1_URL } from "./auth";
-import { ApiError, request, type Paginated } from "./api";
+import { ApiError, type Paginated } from "./api";
+import { createCrudResource } from "./crud";
 
 export { ApiError };
 export type { Paginated };
@@ -22,82 +23,25 @@ export type Animal = {
   updated_at: string;
 };
 
+type AnimalTypeInput = { name: string; description?: string };
+type AnimalInput = { name: string; animal_type: number; description?: string };
+
 const ANIMAL_TYPES_URL = `${API_V1_URL}/animals/types/`;
 const ANIMALS_URL = `${API_V1_URL}/animals/`;
 
-export function listAnimalTypes(url: string = ANIMAL_TYPES_URL) {
-  return request<Paginated<AnimalType>>(url);
-}
+const animalTypes = createCrudResource<AnimalType, AnimalTypeInput>(ANIMAL_TYPES_URL);
+const animals = createCrudResource<Animal, AnimalInput>(ANIMALS_URL);
 
-export async function listAllAnimalTypes(): Promise<AnimalType[]> {
-  const all: AnimalType[] = [];
-  let url: string | undefined = ANIMAL_TYPES_URL;
-  while (url) {
-    const page = await listAnimalTypes(url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
-}
+export const listAnimalTypes = animalTypes.list;
+export const listAllAnimalTypes = animalTypes.listAll;
+export const getAnimalType = animalTypes.get;
+export const createAnimalType = animalTypes.create;
+export const updateAnimalType = animalTypes.update;
+export const deleteAnimalType = animalTypes.remove;
 
-export function getAnimalType(id: number) {
-  return request<AnimalType>(`${ANIMAL_TYPES_URL}${id}/`);
-}
-
-export function createAnimalType(data: { name: string; description?: string }) {
-  return request<AnimalType>(ANIMAL_TYPES_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updateAnimalType(id: number, data: { name: string; description?: string }) {
-  return request<AnimalType>(`${ANIMAL_TYPES_URL}${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteAnimalType(id: number) {
-  return request<void>(`${ANIMAL_TYPES_URL}${id}/`, { method: "DELETE" });
-}
-
-export function listAnimals(url: string = ANIMALS_URL) {
-  return request<Paginated<Animal>>(url);
-}
-
-export async function listAllAnimals(): Promise<Animal[]> {
-  const all: Animal[] = [];
-  let url: string | undefined = ANIMALS_URL;
-  while (url) {
-    const page = await listAnimals(url);
-    all.push(...page.results);
-    url = page.next ?? undefined;
-  }
-  return all;
-}
-
-export function getAnimal(id: number) {
-  return request<Animal>(`${ANIMALS_URL}${id}/`);
-}
-
-export function createAnimal(data: { name: string; animal_type: number; description?: string }) {
-  return request<Animal>(ANIMALS_URL, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updateAnimal(
-  id: number,
-  data: { name: string; animal_type: number; description?: string }
-) {
-  return request<Animal>(`${ANIMALS_URL}${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteAnimal(id: number) {
-  return request<void>(`${ANIMALS_URL}${id}/`, { method: "DELETE" });
-}
+export const listAnimals = animals.list;
+export const listAllAnimals = animals.listAll;
+export const getAnimal = animals.get;
+export const createAnimal = animals.create;
+export const updateAnimal = animals.update;
+export const deleteAnimal = animals.remove;
