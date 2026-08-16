@@ -1,3 +1,11 @@
+"""Strategy pattern for delivering vaccine expiration reminders.
+
+Each notification channel (email, SMS, ...) implements :class:`ReminderChannel`,
+and :func:`get_reminder_channel` resolves the right strategy for a client/service
+pair. New channels can be added by registering another entry in
+:data:`REMINDER_CHANNELS` without touching the scheduling logic that calls them.
+"""
+
 import logging
 from abc import ABC, abstractmethod
 from datetime import date
@@ -16,13 +24,32 @@ class ReminderChannel(ABC):
     @abstractmethod
     def send(
         self, *, client: Client, patient_name: str, service_name: str, valid_until: date
-    ) -> None: ...
+    ) -> None:
+        """Deliver a reminder that a patient's vaccine protection is expiring.
+
+        Args:
+            client: The owner to notify.
+            patient_name: Name of the patient whose protection is expiring.
+            service_name: Name of the vaccine/service that is expiring.
+            valid_until: Date the vaccine's protection ends.
+        """
+        ...
 
 
 class EmailReminderChannel(ReminderChannel):
+    """Sends the reminder as an email, drafted by AI when available."""
+
     def send(
         self, *, client: Client, patient_name: str, service_name: str, valid_until: date
     ) -> None:
+        """Email the reminder to the client's address.
+
+        Args:
+            client: The owner to notify; the email is sent to ``client.email``.
+            patient_name: Name of the patient whose protection is expiring.
+            service_name: Name of the vaccine/service that is expiring.
+            valid_until: Date the vaccine's protection ends.
+        """
         send_mail(
             subject=f"{patient_name}'s vaccination is expiring soon",
             message=self._body(patient_name, service_name, valid_until, client),
@@ -32,6 +59,18 @@ class EmailReminderChannel(ReminderChannel):
 
     @staticmethod
     def _body(patient_name: str, service_name: str, valid_until: date, client: Client) -> str:
+        """Build the email body, preferring an AI-drafted message over the fallback.
+
+        Args:
+            patient_name: Name of the patient whose protection is expiring.
+            service_name: Name of the vaccine/service that is expiring.
+            valid_until: Date the vaccine's protection ends.
+            client: The owner the message is addressed to.
+
+        Returns:
+            The AI-drafted message when Ollama is configured and reachable,
+            otherwise a static fallback template.
+        """
         fallback = (
             f"Hi {client.first_name},\n\n"
             f"{patient_name}'s {service_name} protection ends on {valid_until}. "
@@ -51,10 +90,22 @@ class EmailReminderChannel(ReminderChannel):
 
 
 class SmsReminderChannel(ReminderChannel):
+    """Sends the reminder over SMS.
+
+    No SMS provider is wired up yet, so this only logs what would have been sent.
+    """
+
     def send(
         self, *, client: Client, patient_name: str, service_name: str, valid_until: date
     ) -> None:
-        # No SMS provider is wired up yet - log what would have been sent instead.
+        """Log the SMS reminder that would be sent to the client.
+
+        Args:
+            client: The owner to notify; ``client.phone_number`` is logged.
+            patient_name: Name of the patient whose protection is expiring.
+            service_name: Name of the vaccine/service that is expiring.
+            valid_until: Date the vaccine's protection ends.
+        """
         logger.info(
             "SMS vaccine reminder to %s (%s): %s's %s expires on %s.",
             client,
@@ -73,4 +124,15 @@ DEFAULT_REMINDER_CHANNEL = REMINDER_CHANNELS[NotificationChannel.EMAIL]
 
 
 def get_reminder_channel(channel: str) -> ReminderChannel:
+    """Resolve the reminder strategy for a notification channel.
+
+    Args:
+        channel: A :class:`~src.models.clients.NotificationChannel` value (or
+            plain string equivalent, e.g. from a model field). Unknown or blank
+            values fall back to email.
+
+    Returns:
+        The :class:`ReminderChannel` registered for ``channel``, or
+        :data:`DEFAULT_REMINDER_CHANNEL` if none is registered.
+    """
     return REMINDER_CHANNELS.get(channel, DEFAULT_REMINDER_CHANNEL)
