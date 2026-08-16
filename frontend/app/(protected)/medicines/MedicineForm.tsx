@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api";
+import { useForm } from "@/lib/hooks/useForm";
 import type { DosageForm, MedicineInput } from "@/lib/medicines";
 import RichTextEditor from "@/components/RichTextEditor";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -43,51 +42,26 @@ export default function MedicineForm({
   title: string;
   onSubmit: (values: MedicineInput) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        name: values.name,
-        manufacturer: values.manufacturer,
-        active_substance: values.active_substance,
-        form: values.form,
-        strength: values.strength,
-        unit: values.unit,
-        description: values.description || null,
-        withdrawal_period_days: values.withdrawal_period_days
-          ? Number(values.withdrawal_period_days)
-          : null,
-        minimum_stock_level: values.minimum_stock_level || null,
-        requires_prescription: values.requires_prescription,
-        is_controlled_substance: values.is_controlled_substance,
-      });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const { values, setValues, fieldErrors, isSubmitting, handleSubmit, errors } = useForm({
+    initialValues,
+    onSubmit,
+    prepareSubmit: (v) => ({
+      name: v.name,
+      manufacturer: v.manufacturer,
+      active_substance: v.active_substance,
+      form: v.form,
+      strength: v.strength,
+      unit: v.unit,
+      description: v.description || null,
+      withdrawal_period_days: v.withdrawal_period_days ? Number(v.withdrawal_period_days) : null,
+      minimum_stock_level: v.minimum_stock_level || null,
+      requires_prescription: v.requires_prescription,
+      is_controlled_substance: v.is_controlled_substance,
+    }),
+  });
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
-  function errors(id: string) {
-    return fieldErrors[id]?.map((msg) => (
-      <p key={msg} className="text-xs text-danger">
-        {msg}
-      </p>
-    ));
-  }
 
   return (
     <form

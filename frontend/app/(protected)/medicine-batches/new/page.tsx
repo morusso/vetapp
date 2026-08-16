@@ -1,27 +1,48 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError } from "@/lib/api";
-import { createMedicineBatch, listAllMedicines, type Medicine } from "@/lib/medicines";
+import { useForm } from "@/lib/hooks/useForm";
+import {
+  createMedicineBatch,
+  listAllMedicines,
+  type Medicine,
+  type MedicineBatchInput,
+} from "@/lib/medicines";
 import SearchableSelect from "@/components/SearchableSelect";
 
 export default function NewMedicineBatchPage() {
   const router = useRouter();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [values, setValues] = useState({
-    medicine: "",
-    batch_number: "",
-    quantity: "",
-    purchase_price: "",
-    sale_price: "",
-    tax_rate: "",
-    supplier: "",
-    received_at: new Date().toISOString().slice(0, 10),
-    expiry_date: "",
-  });
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit, errors } =
+    useForm({
+      initialValues: {
+        medicine: "",
+        batch_number: "",
+        quantity: "",
+        purchase_price: "",
+        sale_price: "",
+        tax_rate: "",
+        supplier: "",
+        received_at: new Date().toISOString().slice(0, 10),
+        expiry_date: "",
+      },
+      onSubmit: async (v: MedicineBatchInput) => {
+        await createMedicineBatch(v);
+        router.push("/medicine-batches");
+      },
+      prepareSubmit: (v) => ({
+        medicine: Number(v.medicine),
+        batch_number: v.batch_number,
+        quantity: v.quantity,
+        purchase_price: v.purchase_price || null,
+        sale_price: v.sale_price || null,
+        tax_rate: v.tax_rate || null,
+        supplier: v.supplier,
+        received_at: v.received_at,
+        expiry_date: v.expiry_date,
+      }),
+    });
 
   useEffect(() => {
     listAllMedicines()
@@ -29,46 +50,10 @@ export default function NewMedicineBatchPage() {
       .catch(() =>
         setFieldErrors((prev) => ({ ...prev, detail: ["Could not load medicines."] }))
       );
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await createMedicineBatch({
-        medicine: Number(values.medicine),
-        batch_number: values.batch_number,
-        quantity: values.quantity,
-        purchase_price: values.purchase_price || null,
-        sale_price: values.sale_price || null,
-        tax_rate: values.tax_rate || null,
-        supplier: values.supplier,
-        received_at: values.received_at,
-        expiry_date: values.expiry_date,
-      });
-      router.push("/medicine-batches");
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
-  function errors(id: string) {
-    return fieldErrors[id]?.map((msg) => (
-      <p key={msg} className="text-xs text-danger">
-        {msg}
-      </p>
-    ));
-  }
 
   return (
     <main className="flex flex-1 justify-center p-6">

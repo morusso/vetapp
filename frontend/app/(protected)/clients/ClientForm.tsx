@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api";
+import { useForm, type FieldErrors } from "@/lib/hooks/useForm";
 import type { NotificationChannel } from "@/lib/clients";
 import RichTextEditor from "@/components/RichTextEditor";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -43,9 +42,20 @@ export default function ClientForm({
   title: string;
   onSubmit: (values: ClientFormValues) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit } = useForm({
+    initialValues,
+    onSubmit,
+    validate: (v): FieldErrors | null => {
+      if (v.email && !EMAIL_PATTERN.test(v.email)) return { email: [EMAIL_ERROR] };
+      if (v.phone_number && !PHONE_NUMBER_PATTERN.test(v.phone_number)) {
+        return { phone_number: [PHONE_NUMBER_ERROR] };
+      }
+      if (v.postal_code && !POSTAL_CODE_PATTERN.test(v.postal_code)) {
+        return { postal_code: [POSTAL_CODE_ERROR] };
+      }
+      return null;
+    },
+  });
 
   function handleChange(id: keyof ClientFormValues, value: string) {
     setValues((prev) => ({ ...prev, [id]: value }));
@@ -84,39 +94,6 @@ export default function ClientForm({
         }
         return next;
       });
-    }
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-
-    if (values.email && !EMAIL_PATTERN.test(values.email)) {
-      setFieldErrors({ email: [EMAIL_ERROR] });
-      return;
-    }
-
-    if (values.phone_number && !PHONE_NUMBER_PATTERN.test(values.phone_number)) {
-      setFieldErrors({ phone_number: [PHONE_NUMBER_ERROR] });
-      return;
-    }
-
-    if (values.postal_code && !POSTAL_CODE_PATTERN.test(values.postal_code)) {
-      setFieldErrors({ postal_code: [POSTAL_CODE_ERROR] });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await onSubmit(values);
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
     }
   }
 

@@ -1,44 +1,28 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { changePassword, ChangePasswordError } from "@/lib/auth";
+import { useForm } from "@/lib/hooks/useForm";
+import { changePassword } from "@/lib/auth";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
   const { logout } = useAuth();
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-
-    if (newPassword !== newPasswordConfirm) {
-      setFieldErrors({ new_password_confirm: ["Passwords do not match."] });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await changePassword(oldPassword, newPassword);
+  const { values, setValues, fieldErrors, isSubmitting, handleSubmit } = useForm({
+    initialValues: { old_password: "", new_password: "", new_password_confirm: "" },
+    onSubmit: async (v) => {
+      await changePassword(v.old_password, v.new_password);
       // the backend revokes all sessions on password change, so log out locally too
       await logout();
       router.push("/login");
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ChangePasswordError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+    },
+    validate: (v) => {
+      if (v.new_password !== v.new_password_confirm) {
+        return { new_password_confirm: ["Passwords do not match."] };
+      }
+      return null;
+    },
+  });
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
@@ -63,8 +47,8 @@ export default function ChangePasswordPage() {
               type="password"
               required
               autoComplete="current-password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
+              value={values.old_password}
+              onChange={(e) => setValues({ ...values, old_password: e.target.value })}
               className={inputClass}
             />
             {fieldErrors.old_password?.map((msg) => (
@@ -83,8 +67,8 @@ export default function ChangePasswordPage() {
               type="password"
               required
               autoComplete="new-password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              value={values.new_password}
+              onChange={(e) => setValues({ ...values, new_password: e.target.value })}
               className={inputClass}
             />
             {fieldErrors.new_password?.map((msg) => (
@@ -103,8 +87,8 @@ export default function ChangePasswordPage() {
               type="password"
               required
               autoComplete="new-password"
-              value={newPasswordConfirm}
-              onChange={(e) => setNewPasswordConfirm(e.target.value)}
+              value={values.new_password_confirm}
+              onChange={(e) => setValues({ ...values, new_password_confirm: e.target.value })}
               className={inputClass}
             />
             {fieldErrors.new_password_confirm?.map((msg) => (

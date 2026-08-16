@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api";
+import { useEffect, useState } from "react";
 import { listAllAnimals, type Animal } from "@/lib/animals";
 import { listAllClients, type Client } from "@/lib/clients";
+import { useForm } from "@/lib/hooks/useForm";
 import type { PatientInput, Sex } from "@/lib/patients";
 import RichTextEditor from "@/components/RichTextEditor";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -39,11 +39,26 @@ export default function PatientForm({
   title: string;
   onSubmit: (values: PatientInput) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [clients, setClients] = useState<Client[]>([]);
   const [breeds, setBreeds] = useState<Animal[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit, errors } =
+    useForm({
+      initialValues,
+      onSubmit,
+      prepareSubmit: (v) => ({
+        name: v.name,
+        owner: Number(v.owner),
+        breed: Number(v.breed),
+        sex: v.sex,
+        birth_date: v.birth_date || null,
+        color: v.color,
+        microchip_number: v.microchip_number || null,
+        note: v.note || null,
+        is_sterilized: v.is_sterilized,
+        is_deceased: v.is_deceased,
+        date_of_death: v.date_of_death || null,
+      }),
+    });
 
   useEffect(() => {
     listAllClients()
@@ -52,47 +67,10 @@ export default function PatientForm({
     listAllAnimals()
       .then(setBreeds)
       .catch(() => setFieldErrors((prev) => ({ ...prev, detail: ["Could not load breeds."] })));
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        name: values.name,
-        owner: Number(values.owner),
-        breed: Number(values.breed),
-        sex: values.sex,
-        birth_date: values.birth_date || null,
-        color: values.color,
-        microchip_number: values.microchip_number || null,
-        note: values.note || null,
-        is_sterilized: values.is_sterilized,
-        is_deceased: values.is_deceased,
-        date_of_death: values.date_of_death || null,
-      });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
-  function errors(id: string) {
-    return fieldErrors[id]?.map((msg) => (
-      <p key={msg} className="text-xs text-danger">
-        {msg}
-      </p>
-    ));
-  }
 
   return (
     <form

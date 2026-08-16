@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { ApiError, listAllAnimalTypes, type AnimalType } from "@/lib/animals";
+import { useEffect, useState } from "react";
+import { listAllAnimalTypes, type AnimalType } from "@/lib/animals";
+import { useForm } from "@/lib/hooks/useForm";
 import RichTextEditor from "@/components/RichTextEditor";
 import SearchableSelect from "@/components/SearchableSelect";
 
@@ -18,33 +19,18 @@ export default function AnimalForm({
   title: string;
   onSubmit: (values: { name: string; animal_type: number; description: string }) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [animalTypes, setAnimalTypes] = useState<AnimalType[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit } = useForm({
+    initialValues,
+    onSubmit,
+    prepareSubmit: (v) => ({ ...v, animal_type: Number(v.animal_type) }),
+  });
 
   useEffect(() => {
     listAllAnimalTypes()
       .then(setAnimalTypes)
       .catch(() => setFieldErrors({ detail: ["Could not load animal types."] }));
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-    setIsSubmitting(true);
-    try {
-      await onSubmit({ ...values, animal_type: Number(values.animal_type) });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   const inputClass =
     "rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";

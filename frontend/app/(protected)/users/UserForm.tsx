@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { ApiError, listAllSpecializations, type Specialization, type UserInput } from "@/lib/users";
+import { useEffect, useState } from "react";
+import { useForm, type FieldErrors } from "@/lib/hooks/useForm";
+import { listAllSpecializations, type Specialization, type UserInput } from "@/lib/users";
 
 export type UserFormValues = {
   email: string;
@@ -32,10 +33,31 @@ export default function UserForm({
   title: string;
   onSubmit: (values: UserInput) => Promise<void>;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { values, setValues, fieldErrors, setFieldErrors, isSubmitting, handleSubmit } = useForm({
+    initialValues,
+    onSubmit,
+    prepareSubmit: (v) => ({
+      email: v.email,
+      password: v.password,
+      first_name: v.first_name,
+      last_name: v.last_name,
+      phone_number: v.phone_number,
+      specializations: v.specializations,
+      is_staff: v.is_staff,
+      is_active: v.is_active,
+    }),
+    validate: (v): FieldErrors | null => {
+      if (v.email && !EMAIL_PATTERN.test(v.email)) return { email: [EMAIL_ERROR] };
+      if (v.password !== v.password_confirm) {
+        return { password_confirm: ["Passwords do not match."] };
+      }
+      if (v.phone_number && !PHONE_NUMBER_PATTERN.test(v.phone_number)) {
+        return { phone_number: [PHONE_NUMBER_ERROR] };
+      }
+      return null;
+    },
+  });
 
   function handleChange(
     id: "email" | "password" | "password_confirm" | "first_name" | "last_name" | "phone_number",
@@ -74,49 +96,7 @@ export default function UserForm({
       .catch(() =>
         setFieldErrors((prev) => ({ ...prev, detail: ["Could not load specializations."] }))
       );
-  }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFieldErrors({});
-
-    if (values.email && !EMAIL_PATTERN.test(values.email)) {
-      setFieldErrors({ email: [EMAIL_ERROR] });
-      return;
-    }
-
-    if (values.password !== values.password_confirm) {
-      setFieldErrors({ password_confirm: ["Passwords do not match."] });
-      return;
-    }
-
-    if (values.phone_number && !PHONE_NUMBER_PATTERN.test(values.phone_number)) {
-      setFieldErrors({ phone_number: [PHONE_NUMBER_ERROR] });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        email: values.email,
-        password: values.password,
-        first_name: values.first_name,
-        last_name: values.last_name,
-        phone_number: values.phone_number,
-        specializations: values.specializations,
-        is_staff: values.is_staff,
-        is_active: values.is_active,
-      });
-    } catch (err) {
-      setFieldErrors(
-        err instanceof ApiError
-          ? err.fieldErrors
-          : { detail: ["Could not connect to the server."] }
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  }, [setFieldErrors]);
 
   function field(
     id: "email" | "password" | "password_confirm" | "first_name" | "last_name" | "phone_number",
