@@ -11,11 +11,18 @@ import {
   type VisitService,
 } from "@/lib/visits";
 import { TrashIcon } from "@/components/icons";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const NOTIFICATION_CHANNEL_LABELS: Record<string, string> = {
   email: "Email",
   sms: "SMS",
 };
+
+const NOTIFICATION_CHANNEL_OPTIONS = [
+  { value: "", label: "Client's default" },
+  { value: "email", label: "Email" },
+  { value: "sms", label: "SMS" },
+];
 
 export default function VisitServices({ visitId }: { visitId: number }) {
   const [visitServices, setVisitServices] = useState<VisitService[]>([]);
@@ -139,22 +146,15 @@ export default function VisitServices({ visitId }: { visitId: number }) {
             <label htmlFor="service" className="text-xs font-semibold text-ink-muted">
               Service
             </label>
-            <select
+            <SearchableSelect
               id="service"
               required
               value={service}
-              onChange={(e) => setService(e.target.value)}
+              onChange={setService}
+              placeholder="Select a service"
               className={inputClass}
-            >
-              <option value="" disabled>
-                Select a service
-              </option>
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+              options={services.map((s) => ({ value: String(s.id), label: s.name }))}
+            />
           </div>
 
           <div className="flex items-end gap-2">
@@ -211,24 +211,27 @@ export default function VisitServices({ visitId }: { visitId: number }) {
               />
             </div>
             <div className="flex flex-1 flex-col gap-1">
-              <label
-                htmlFor="notification_channel"
-                className="text-xs font-semibold text-ink-muted"
-              >
-                Remind client via
-              </label>
-              <select
-                id="notification_channel"
-                value={notificationChannel}
-                onChange={(e) =>
-                  setNotificationChannel(e.target.value as NotificationChannel | "")
-                }
-                className={inputClass}
-              >
-                <option value="">Client&apos;s default</option>
-                <option value="email">Email</option>
-                <option value="sms">SMS</option>
-              </select>
+              <span className="text-xs font-semibold text-ink-muted">Remind client via</span>
+              <div className="flex flex-wrap items-center gap-3 py-2">
+                {NOTIFICATION_CHANNEL_OPTIONS.map((option) => (
+                  <label
+                    key={option.value || "default"}
+                    className="flex items-center gap-1.5 text-sm"
+                  >
+                    <input
+                      type="radio"
+                      name="notification_channel"
+                      value={option.value}
+                      checked={notificationChannel === option.value}
+                      onChange={() =>
+                        setNotificationChannel(option.value as NotificationChannel | "")
+                      }
+                      className="accent-accent"
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         </form>

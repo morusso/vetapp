@@ -6,6 +6,7 @@ import { listAllPatients, type Patient } from "@/lib/patients";
 import { listAllUsers, type User } from "@/lib/users";
 import type { VisitInput } from "@/lib/visits";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export type VisitFormValues = {
   patient: string;
@@ -106,22 +107,18 @@ export default function VisitForm({
               <label htmlFor="patient" className="text-xs font-semibold text-ink-muted">
                 Patient *
               </label>
-              <select
+              <SearchableSelect
                 id="patient"
                 required
                 value={values.patient}
-                onChange={(e) => setValues({ ...values, patient: e.target.value })}
+                onChange={(v) => setValues({ ...values, patient: v })}
+                placeholder="Select a patient"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select a patient
-                </option>
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.owner_name})
-                  </option>
-                ))}
-              </select>
+                options={patients.map((p) => ({
+                  value: String(p.id),
+                  label: `${p.name} (${p.owner_name})`,
+                }))}
+              />
               {errors("patient")}
             </div>
 
@@ -129,22 +126,18 @@ export default function VisitForm({
               <label htmlFor="veterinarian" className="text-xs font-semibold text-ink-muted">
                 Veterinarian *
               </label>
-              <select
+              <SearchableSelect
                 id="veterinarian"
                 required
                 value={values.veterinarian}
-                onChange={(e) => setValues({ ...values, veterinarian: e.target.value })}
+                onChange={(v) => setValues({ ...values, veterinarian: v })}
+                placeholder="Select a veterinarian"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select a veterinarian
-                </option>
-                {veterinarians.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {userLabel(u)}
-                  </option>
-                ))}
-              </select>
+                options={veterinarians.map((u) => ({
+                  value: String(u.id),
+                  label: userLabel(u),
+                }))}
+              />
               {errors("veterinarian")}
             </div>
           </div>

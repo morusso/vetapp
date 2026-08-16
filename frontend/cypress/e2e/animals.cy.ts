@@ -29,7 +29,9 @@ describe("Animals CRUD", () => {
 
     cy.url().should("include", "/animals/new");
     cy.get("#name").type(name);
-    cy.get("#animal_type").select(animalTypeName);
+    cy.get("#animal_type").click();
+    cy.get('input[placeholder="Search..."]').type(animalTypeName);
+    cy.contains('[role="option"]', animalTypeName).click();
     cy.contains("button", "Create").click();
 
     cy.url().should("match", /\/animals$/);

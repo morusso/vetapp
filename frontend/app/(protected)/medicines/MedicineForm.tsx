@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import type { DosageForm, MedicineInput } from "@/lib/medicines";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export type MedicineFormValues = {
   name: string;
@@ -150,20 +151,13 @@ export default function MedicineForm({
               <label htmlFor="form" className="text-xs font-semibold text-ink-muted">
                 Form
               </label>
-              <select
+              <SearchableSelect
                 id="form"
                 value={values.form}
-                onChange={(e) =>
-                  setValues({ ...values, form: e.target.value as DosageForm })
-                }
+                onChange={(v) => setValues({ ...values, form: v as DosageForm })}
                 className={inputClass}
-              >
-                {DOSAGE_FORMS.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
+                options={DOSAGE_FORMS}
+              />
             </div>
 
             <div className="flex flex-col gap-1">

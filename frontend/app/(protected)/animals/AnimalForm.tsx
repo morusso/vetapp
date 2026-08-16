@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, listAllAnimalTypes, type AnimalType } from "@/lib/animals";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export type AnimalFormValues = { name: string; animal_type: string; description: string };
 
@@ -80,22 +81,18 @@ export default function AnimalForm({
           <label htmlFor="animal_type" className="text-xs font-semibold text-ink-muted">
             Animal type *
           </label>
-          <select
+          <SearchableSelect
             id="animal_type"
             required
             value={values.animal_type}
-            onChange={(e) => setValues({ ...values, animal_type: e.target.value })}
+            onChange={(v) => setValues({ ...values, animal_type: v })}
+            placeholder="Select an animal type"
             className={inputClass}
-          >
-            <option value="" disabled>
-              Select an animal type
-            </option>
-            {animalTypes.map((animalType) => (
-              <option key={animalType.id} value={animalType.id}>
-                {animalType.name}
-              </option>
-            ))}
-          </select>
+            options={animalTypes.map((animalType) => ({
+              value: String(animalType.id),
+              label: animalType.name,
+            }))}
+          />
           {fieldErrors.animal_type?.map((msg) => (
             <p key={msg} className="text-xs text-danger">
               {msg}

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import { createMedicineBatch, listAllMedicines, type Medicine } from "@/lib/medicines";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function NewMedicineBatchPage() {
   const router = useRouter();
@@ -84,22 +85,15 @@ export default function NewMedicineBatchPage() {
             <label htmlFor="medicine" className="text-xs font-semibold text-ink-muted">
               Medicine *
             </label>
-            <select
+            <SearchableSelect
               id="medicine"
               required
               value={values.medicine}
-              onChange={(e) => setValues({ ...values, medicine: e.target.value })}
+              onChange={(v) => setValues({ ...values, medicine: v })}
+              placeholder="Select a medicine"
               className={inputClass}
-            >
-              <option value="" disabled>
-                Select a medicine
-              </option>
-              {medicines.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+              options={medicines.map((m) => ({ value: String(m.id), label: m.name }))}
+            />
             {errors("medicine")}
           </div>
 

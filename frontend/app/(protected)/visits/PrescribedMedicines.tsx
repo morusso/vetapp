@@ -10,6 +10,7 @@ import {
   type PrescribedMedicine,
 } from "@/lib/visits";
 import { TrashIcon } from "@/components/icons";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function PrescribedMedicines({ visitId }: { visitId: number }) {
   const [prescriptions, setPrescriptions] = useState<PrescribedMedicine[]>([]);
@@ -117,22 +118,15 @@ export default function PrescribedMedicines({ visitId }: { visitId: number }) {
             <label htmlFor="medicine" className="text-xs font-semibold text-ink-muted">
               Medicine
             </label>
-            <select
+            <SearchableSelect
               id="medicine"
               required
               value={medicine}
-              onChange={(e) => setMedicine(e.target.value)}
+              onChange={setMedicine}
+              placeholder="Select a medicine"
               className={inputClass}
-            >
-              <option value="" disabled>
-                Select a medicine
-              </option>
-              {medicines.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+              options={medicines.map((m) => ({ value: String(m.id), label: m.name }))}
+            />
           </div>
 
           <div className="flex items-end gap-2">

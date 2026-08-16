@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import type { NotificationChannel } from "@/lib/clients";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export type ClientFormValues = {
   first_name: string;
@@ -241,23 +242,15 @@ export default function ClientForm({
             >
               Preferred channel
             </label>
-            <select
+            <SearchableSelect
               id="preferred_notification_channel"
               value={values.preferred_notification_channel}
-              onChange={(e) =>
-                handleChange(
-                  "preferred_notification_channel",
-                  e.target.value as NotificationChannel
-                )
+              onChange={(v) =>
+                handleChange("preferred_notification_channel", v as NotificationChannel)
               }
               className="rounded-md border border-line-strong bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none"
-            >
-              {NOTIFICATION_CHANNELS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              options={NOTIFICATION_CHANNELS}
+            />
             {fieldErrors.preferred_notification_channel?.map((msg) => (
               <p key={msg} className="text-xs text-danger">
                 {msg}

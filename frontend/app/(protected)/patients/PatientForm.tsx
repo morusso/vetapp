@@ -6,6 +6,13 @@ import { listAllAnimals, type Animal } from "@/lib/animals";
 import { listAllClients, type Client } from "@/lib/clients";
 import type { PatientInput, Sex } from "@/lib/patients";
 import RichTextEditor from "@/components/RichTextEditor";
+import SearchableSelect from "@/components/SearchableSelect";
+
+const SEX_OPTIONS: { value: Sex; label: string }[] = [
+  { value: "unknown", label: "Unknown" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
 
 export type PatientFormValues = {
   name: string;
@@ -121,22 +128,18 @@ export default function PatientForm({
               <label htmlFor="owner" className="text-xs font-semibold text-ink-muted">
                 Owner *
               </label>
-              <select
+              <SearchableSelect
                 id="owner"
                 required
                 value={values.owner}
-                onChange={(e) => setValues({ ...values, owner: e.target.value })}
+                onChange={(v) => setValues({ ...values, owner: v })}
+                placeholder="Select an owner"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select an owner
-                </option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.first_name} {c.last_name}
-                  </option>
-                ))}
-              </select>
+                options={clients.map((c) => ({
+                  value: String(c.id),
+                  label: `${c.first_name} ${c.last_name}`,
+                }))}
+              />
               {errors("owner")}
             </div>
 
@@ -144,22 +147,18 @@ export default function PatientForm({
               <label htmlFor="breed" className="text-xs font-semibold text-ink-muted">
                 Breed *
               </label>
-              <select
+              <SearchableSelect
                 id="breed"
                 required
                 value={values.breed}
-                onChange={(e) => setValues({ ...values, breed: e.target.value })}
+                onChange={(v) => setValues({ ...values, breed: v })}
+                placeholder="Select a breed"
                 className={inputClass}
-              >
-                <option value="" disabled>
-                  Select a breed
-                </option>
-                {breeds.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} ({b.animal_type_name})
-                  </option>
-                ))}
-              </select>
+                options={breeds.map((b) => ({
+                  value: String(b.id),
+                  label: `${b.name} (${b.animal_type_name})`,
+                }))}
+              />
               {errors("breed")}
             </div>
           </div>
@@ -169,16 +168,13 @@ export default function PatientForm({
               <label htmlFor="sex" className="text-xs font-semibold text-ink-muted">
                 Sex
               </label>
-              <select
+              <SearchableSelect
                 id="sex"
                 value={values.sex}
-                onChange={(e) => setValues({ ...values, sex: e.target.value as Sex })}
+                onChange={(v) => setValues({ ...values, sex: v as Sex })}
                 className={inputClass}
-              >
-                <option value="unknown">Unknown</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+                options={SEX_OPTIONS}
+              />
             </div>
 
             <div className="flex flex-col gap-1">
