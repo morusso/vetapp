@@ -9,13 +9,7 @@ from django.utils import cache as _django_cache
 if django.VERSION >= (6, 1) and not hasattr(_django_cache, "cc_delim_re"):
     _django_cache.cc_delim_re = re.compile(r"\s*,\s*")
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-SECRET_KEY = 'django-insecure-stnk1fdm^$=-k5jy4$u&owort!3dnc&#r-8_r%5sogrph6tq8i'
-
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Application definition
@@ -43,6 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -129,6 +124,15 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 
 # Django REST Framework
@@ -149,14 +153,6 @@ REST_FRAMEWORK = {
 }
 
 
-# CORS
-# https://github.com/adamchainz/django-cors-headers
-
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    'CORS_ALLOWED_ORIGINS', 'http://localhost:3000'
-).split(',')
-
-
 # Simple JWT
 # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
 
@@ -166,6 +162,17 @@ JWT_PRIVATE_KEY_PATH = Path(
 JWT_PUBLIC_KEY_PATH = Path(
     os.environ.get('JWT_PUBLIC_KEY_PATH', BASE_DIR / 'vetapp' / 'keys' / 'public.pem')
 )
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'RS256',
+    'SIGNING_KEY': JWT_PRIVATE_KEY_PATH.read_text(),
+    'VERIFYING_KEY': JWT_PUBLIC_KEY_PATH.read_text(),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+}
 
 # Email
 # https://docs.djangoproject.com/en/stable/topics/email/
@@ -198,15 +205,3 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-
-
-SIMPLE_JWT = {
-    'ALGORITHM': 'RS256',
-    'SIGNING_KEY': JWT_PRIVATE_KEY_PATH.read_text(),
-    'VERIFYING_KEY': JWT_PUBLIC_KEY_PATH.read_text(),
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-}
